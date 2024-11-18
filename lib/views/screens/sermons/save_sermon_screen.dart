@@ -42,28 +42,28 @@ class SaveSermonScreen extends StatelessWidget {
                       ),
                     ),
                     // Content
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             '24 Oktober 2023',
                             style: TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          const Text(
+                          SizedBox(height: 4),
+                          Text(
                             'Hikmat Dalam Berbagai Persoalan Pernikahan',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           Row(
-                            children: const [
+                            children: [
                               Text(
                                 '1 minggu yang lalu',
                                 style: TextStyle(

@@ -8,12 +8,12 @@ class CustomDateField extends StatelessWidget {
   final Function(DateTime) onDateSelected;
 
   const CustomDateField({
-    Key? key,
+    super.key,
     required this.label,
     required this.controller,
     required this.onDateSelected,
     this.errorText,
-  }) : super(key: key);
+  });
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(

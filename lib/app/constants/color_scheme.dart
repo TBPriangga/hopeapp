@@ -47,8 +47,6 @@ const colorScheme = ColorScheme(
   onSecondary: whiteColor,
   error: error40,
   onError: whiteColor,
-  background: whiteColor,
-  onBackground: blackColor,
   surface: whiteColor,
   onSurface: blackColor,
 );

@@ -29,8 +29,8 @@ class LoginScreen extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0xFF132054).withOpacity(0.8),
-                      Color(0xFF2B478A).withOpacity(0.8),
+                      const Color(0xFF132054).withOpacity(0.8),
+                      const Color(0xFF2B478A).withOpacity(0.8),
                     ],
                     stops: const [0.0, 1.0],
                   ),
@@ -150,8 +150,7 @@ class LoginScreen extends StatelessWidget {
                             Checkbox(
                               value: false,
                               onChanged: (value) {},
-                              fillColor:
-                                  MaterialStateProperty.all(Colors.white),
+                              fillColor: WidgetStateProperty.all(Colors.white),
                             ),
                             const Text(
                               'Lupa kata sandi ?',

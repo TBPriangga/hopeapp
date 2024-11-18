@@ -27,15 +27,16 @@ class _SermonScreenState extends State<SermonScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Center(
-          child: const Text(
+        title: const Center(
+          child: Text(
             'Sermon',
             style: TextStyle(color: Colors.white),
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.bookmark_border_outlined, color: Colors.white),
+            icon:
+                const Icon(Icons.bookmark_border_outlined, color: Colors.white),
             onPressed: () {
               Navigator.pushNamed(context, AppRoutes.saveSermon);
             },
@@ -76,7 +77,7 @@ class _SermonScreenState extends State<SermonScreen> {
                         child: Container(
                           height: 120, // Sesuaikan tinggi shadow
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.vertical(
+                            borderRadius: const BorderRadius.vertical(
                                 bottom: Radius.circular(
                                     8)), // Tambahkan border radius di sini
                             gradient: LinearGradient(
@@ -95,10 +96,10 @@ class _SermonScreenState extends State<SermonScreen> {
                       // Layer content
                       Container(
                         padding: const EdgeInsets.all(16),
-                        child: Column(
+                        child: const Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
                               'HIKMAT DALAM BERBAGAI PERSOALAN PERNIKAHAN',
                               style: TextStyle(
@@ -200,28 +201,28 @@ class _SermonScreenState extends State<SermonScreen> {
                         ),
                         const SizedBox(width: 12),
                         // Content
-                        Expanded(
+                        const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 '24 Oktober 2023',
                                 style: TextStyle(
                                   color: Colors.grey,
                                   fontSize: 12,
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              const Text(
+                              SizedBox(height: 4),
+                              Text(
                                 'Hikmat Dalam Berbagai Persoalan Pernikahan',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               Row(
-                                children: const [
+                                children: [
                                   Text(
                                     '1 minggu yang lalu',
                                     style: TextStyle(

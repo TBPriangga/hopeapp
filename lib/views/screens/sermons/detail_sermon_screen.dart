@@ -28,49 +28,48 @@ class DetailSermonScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Hikmat Dalam Berbagai Persoalan',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         '24-10-2023',
                         style: TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      const Text(
+                      SizedBox(width: 8),
+                      Text(
                         '1 minggu yang lalu',
                         style: TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
                         ),
                       ),
-                      const Spacer(),
-                      const Icon(Icons.remove_red_eye,
-                          size: 16, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      const Text(
+                      Spacer(),
+                      Icon(Icons.remove_red_eye, size: 16, color: Colors.grey),
+                      SizedBox(width: 4),
+                      Text(
                         '1045',
                         style: TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.bookmark_border, size: 16),
+                      SizedBox(width: 8),
+                      Icon(Icons.bookmark_border, size: 16),
                     ],
                   ),
                 ],
@@ -163,10 +162,10 @@ class DetailSermonScreen extends StatelessWidget {
                               // Layer content
                               Container(
                                 padding: const EdgeInsets.all(16),
-                                child: Column(
+                                child: const Column(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
+                                  children: [
                                     Text(
                                       'HIKMAT DALAM BERBAGAI PERSOALAN PERNIKAHAN',
                                       style: TextStyle(
