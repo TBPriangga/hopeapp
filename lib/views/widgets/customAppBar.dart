@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../app/routes/app_routes.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -28,12 +27,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           icon: const Icon(Icons.notifications, color: Colors.white),
           onPressed: () {
             Navigator.pushNamed(context, AppRoutes.notification);
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.logout, color: Colors.white),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, AppRoutes.login);
           },
         ),
       ],

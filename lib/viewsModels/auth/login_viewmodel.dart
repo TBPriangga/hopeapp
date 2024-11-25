@@ -86,6 +86,64 @@ class LoginViewModel extends ChangeNotifier {
     return true;
   }
 
+  Future<Map<String, dynamic>> signInWithGoogle() async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final UserCredential? userCredential =
+          await _authService.signInWithGoogle();
+
+      if (userCredential == null) {
+        throw Exception('Google sign in cancelled');
+      }
+
+      final User user = userCredential.user!;
+      final bool isNewUser = await _authService.isNewUser(user.uid);
+
+      if (isNewUser) {
+        // User baru perlu melengkapi profile
+        return {
+          'success': true,
+          'isNewUser': true,
+          'userData': {
+            'id': user.uid,
+            'email': user.email,
+            'name': user.displayName,
+            'photoUrl': user.photoURL,
+          }
+        };
+      } else {
+        // User yang sudah ada
+        final userData = await _firestoreService.getUserData(user.uid);
+
+        // Update photo URL jika berubah
+        if (userData != null &&
+            user.photoURL != null &&
+            user.photoURL != userData.photoUrl) {
+          final updatedUser = userData.copyWith(photoUrl: user.photoURL);
+          await _firestoreService.saveUserData(updatedUser);
+          _currentUser = updatedUser;
+        } else {
+          _currentUser = userData;
+        }
+
+        if (_currentUser == null) {
+          throw Exception('User data not found');
+        }
+
+        return {'success': true, 'isNewUser': false, 'userData': _currentUser};
+      }
+    } catch (e) {
+      _errorMessage = _getErrorMessage(e);
+      return {'success': false, 'error': _errorMessage};
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   String _getErrorMessage(dynamic e) {
     if (e is FirebaseAuthException) {
       switch (e.code) {
@@ -95,6 +153,12 @@ class LoginViewModel extends ChangeNotifier {
           return 'Password salah';
         case 'invalid-email':
           return 'Format email tidak valid';
+        case 'account-exists-with-different-credential':
+          return 'Akun sudah terdaftar dengan metode login yang berbeda';
+        case 'invalid-credential':
+          return 'Kredensial tidak valid';
+        case 'operation-not-allowed':
+          return 'Login dengan Google tidak diizinkan';
         case 'user-disabled':
           return 'Akun telah dinonaktifkan';
         default:

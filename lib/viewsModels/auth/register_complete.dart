@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import '../../core/services/auth_service.dart';
-import '../../core/services/firestore_service.dart';
-import '../../models/user_model.dart';
+import '../../../models/user_model.dart';
+import '../../../core/services/firestore_service.dart';
 
-class RegisterViewModel extends ChangeNotifier {
-  final AuthService _authService = AuthService();
+class CompleteProfileViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
+  final Map<String, dynamic> _userData;
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -16,27 +14,30 @@ class RegisterViewModel extends ChangeNotifier {
   // Controllers
   final TextEditingController emailController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final TextEditingController birthDateController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
 
-  // Default avatar
-  static const String defaultAvatarUrl = 'assets/icons/default_avatar.png';
+  CompleteProfileViewModel(this._userData) {
+    // Pre-fill data from Google Sign In
+    emailController.text = _userData['email'] ?? '';
+    nameController.text = _userData['name'] ?? '';
+  }
 
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   DateTime? get selectedDate => _selectedDate;
 
-  // Method untuk update tanggal
+  // Update birth date
   void updateBirthDate(DateTime date) {
     _selectedDate = date;
     birthDateController.text = DateFormat('dd/MM/yyyy').format(date);
     notifyListeners();
   }
 
-  Future<bool> register() async {
+  // Complete profile method
+  Future<bool> completeProfile() async {
     if (!_validateInputs()) return false;
 
     try {
@@ -44,24 +45,17 @@ class RegisterViewModel extends ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
-      // Register dengan Firebase Auth
-      UserCredential userCredential = await _authService.register(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
-
-      // Buat model user dengan default avatar
       final user = UserModel(
-        id: userCredential.user!.uid,
+        id: _userData['id'],
         email: emailController.text.trim(),
         name: nameController.text.trim(),
         address: addressController.text.trim(),
-        birthDate: _selectedDate!,
+        birthDate: _selectedDate,
         phoneNumber: phoneController.text.trim(),
-        photoUrl: defaultAvatarUrl, // Gunakan default avatar
+        photoUrl: _userData['photoUrl'],
       );
 
-      // Simpan data user ke Firestore
+      // Save to Firestore
       await _firestoreService.saveUserData(user);
 
       _isLoading = false;
@@ -76,28 +70,10 @@ class RegisterViewModel extends ChangeNotifier {
   }
 
   bool _validateInputs() {
-    if (emailController.text.isEmpty ||
-        nameController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        addressController.text.isEmpty ||
+    if (addressController.text.isEmpty ||
         _selectedDate == null ||
         phoneController.text.isEmpty) {
       _errorMessage = 'Semua field harus diisi';
-      notifyListeners();
-      return false;
-    }
-
-    // Validasi email
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-        .hasMatch(emailController.text)) {
-      _errorMessage = 'Format email tidak valid';
-      notifyListeners();
-      return false;
-    }
-
-    // Validasi password (minimal 6 karakter)
-    if (passwordController.text.length < 6) {
-      _errorMessage = 'Password minimal 6 karakter';
       notifyListeners();
       return false;
     }
@@ -109,43 +85,27 @@ class RegisterViewModel extends ChangeNotifier {
       return false;
     }
 
-    // Validasi umur (minimal 13 tahun)
+    // Validasi tanggal lahir
     if (_selectedDate != null) {
-      final DateTime now = DateTime.now();
-      final DateTime minAge = DateTime(now.year - 13, now.month, now.day);
-      if (_selectedDate!.isAfter(minAge)) {
+      final now = DateTime.now();
+      final difference = now.difference(_selectedDate!).inDays;
+
+      // Minimal umur 13 tahun
+      if (difference < (13 * 365)) {
         _errorMessage = 'Umur minimal 13 tahun';
         notifyListeners();
         return false;
       }
     }
 
-    // Validasi nama (tidak boleh mengandung angka atau karakter khusus)
-    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(nameController.text)) {
-      _errorMessage = 'Nama hanya boleh berisi huruf';
-      notifyListeners();
-      return false;
-    }
-
     return true;
   }
 
   String _getErrorMessage(dynamic e) {
-    if (e is FirebaseAuthException) {
-      switch (e.code) {
-        case 'email-already-in-use':
-          return 'Email sudah terdaftar';
-        case 'invalid-email':
-          return 'Format email tidak valid';
-        case 'operation-not-allowed':
-          return 'Operasi tidak diizinkan';
-        case 'weak-password':
-          return 'Password terlalu lemah';
-        default:
-          return 'Terjadi kesalahan: ${e.message}';
-      }
+    if (e is Exception) {
+      return 'Terjadi kesalahan: ${e.toString()}';
     }
-    return 'Terjadi kesalahan: $e';
+    return 'Terjadi kesalahan yang tidak diketahui';
   }
 
   void clearError() {
@@ -154,9 +114,6 @@ class RegisterViewModel extends ChangeNotifier {
   }
 
   void resetForm() {
-    emailController.clear();
-    nameController.clear();
-    passwordController.clear();
     addressController.clear();
     birthDateController.clear();
     phoneController.clear();
@@ -169,7 +126,6 @@ class RegisterViewModel extends ChangeNotifier {
   void dispose() {
     emailController.dispose();
     nameController.dispose();
-    passwordController.dispose();
     addressController.dispose();
     birthDateController.dispose();
     phoneController.dispose();

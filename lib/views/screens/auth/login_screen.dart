@@ -197,6 +197,7 @@ class LoginScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                        // Perbarui bagian ini di LoginScreen
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -207,14 +208,56 @@ class LoginScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 16),
-                            Image.asset(
-                              'assets/icons/google_icon.png',
-                              height: 24,
-                            ),
-                            const SizedBox(width: 16),
-                            Image.asset(
-                              'assets/icons/facebook_icon.png',
-                              height: 24,
+                            GestureDetector(
+                              onTap: () async {
+                                // Panggil Google Sign In
+                                final result =
+                                    await viewModel.signInWithGoogle();
+
+                                if (result['success']) {
+                                  if (result['isNewUser']) {
+                                    // User baru perlu melengkapi profile
+                                    if (context.mounted) {
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.completeProfile,
+                                        arguments: result['userData'],
+                                      );
+                                    }
+                                  } else {
+                                    // User sudah ada, tampilkan success dialog
+                                    if (context.mounted) {
+                                      DialogHelper.showSuccessDialog(
+                                        context: context,
+                                        title: 'Login Berhasil',
+                                        message: 'Selamat datang!',
+                                        buttonText: 'Lanjutkan',
+                                        onPressed: () {
+                                          Navigator.pop(
+                                              context); // Tutup dialog
+                                          Navigator.pushReplacementNamed(
+                                            context,
+                                            AppRoutes.home,
+                                          );
+                                        },
+                                      );
+                                    }
+                                  }
+                                } else {
+                                  // Tampilkan error jika gagal
+                                  if (context.mounted) {
+                                    DialogHelper.showErrorDialog(
+                                      context: context,
+                                      title: 'Login Gagal',
+                                      message: result['error'],
+                                    );
+                                  }
+                                }
+                              },
+                              child: Image.asset(
+                                'assets/icons/google_icon.png',
+                                height: 24,
+                              ),
                             ),
                           ],
                         ),

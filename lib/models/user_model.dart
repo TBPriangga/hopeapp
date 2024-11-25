@@ -5,18 +5,20 @@ class UserModel {
   final String id;
   final String email;
   final String name;
-  final String address;
-  final DateTime birthDate;
-  final String phoneNumber;
+  final String? address;
+  final DateTime? birthDate;
+  final String? phoneNumber;
+  final String? photoUrl;
   final DateTime? createdAt;
 
   UserModel({
     required this.id,
     required this.email,
     required this.name,
-    required this.address,
-    required this.birthDate,
-    required this.phoneNumber,
+    this.address,
+    this.birthDate,
+    this.phoneNumber,
+    this.photoUrl,
     this.createdAt,
   });
 
@@ -26,11 +28,13 @@ class UserModel {
       id: id,
       email: map['email'] ?? '',
       name: map['name'] ?? '',
-      address: map['address'] ?? '',
-      birthDate: (map['birthDate'] as String).isNotEmpty
-          ? DateFormat('dd/MM/yyyy').parse(map['birthDate'])
-          : DateTime.now(), // atau nilai default lain
-      phoneNumber: map['phoneNumber'] ?? '',
+      address: map['address'],
+      birthDate:
+          map['birthDate'] != null && map['birthDate'].toString().isNotEmpty
+              ? DateFormat('dd/MM/yyyy').parse(map['birthDate'])
+              : null,
+      phoneNumber: map['phoneNumber'],
+      photoUrl: map['photoUrl'],
       createdAt: map['createdAt']?.toDate(),
     );
   }
@@ -41,10 +45,33 @@ class UserModel {
       'email': email,
       'name': name,
       'address': address,
-      'birthDate':
-          DateFormat('dd/MM/yyyy').format(birthDate), // Format ke string
+      'birthDate': birthDate != null
+          ? DateFormat('dd/MM/yyyy').format(birthDate!)
+          : null,
       'phoneNumber': phoneNumber,
+      'photoUrl': photoUrl,
       'createdAt': FieldValue.serverTimestamp(),
     };
+  }
+
+  // Helper method untuk update data
+  UserModel copyWith({
+    String? email,
+    String? name,
+    String? address,
+    DateTime? birthDate,
+    String? phoneNumber,
+    String? photoUrl,
+  }) {
+    return UserModel(
+      id: this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      address: address ?? this.address,
+      birthDate: birthDate ?? this.birthDate,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      photoUrl: photoUrl ?? this.photoUrl,
+      createdAt: this.createdAt,
+    );
   }
 }

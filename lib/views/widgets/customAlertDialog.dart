@@ -1,18 +1,23 @@
-// widgets/custom_alert_dialog.dart
 import 'package:flutter/material.dart';
 
 class CustomAlertDialog extends StatelessWidget {
   final String title;
   final String message;
-  final String buttonText;
-  final VoidCallback onPressed;
+  final String? buttonText;
+  final VoidCallback? onPressed;
+  final String? secondaryButtonText;
+  final VoidCallback? onSecondaryPressed;
+  final bool isLoading;
 
   const CustomAlertDialog({
     super.key,
     required this.title,
     required this.message,
-    required this.buttonText,
-    required this.onPressed,
+    this.buttonText,
+    this.onPressed,
+    this.secondaryButtonText,
+    this.onSecondaryPressed,
+    this.isLoading = false,
   });
 
   @override
@@ -34,32 +39,87 @@ class CustomAlertDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            if (isLoading) ...[
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF132054)),
+              ),
+              const SizedBox(height: 16),
+            ],
             Text(
               message,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: onPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF132054),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+            if (!isLoading && secondaryButtonText != null) ...[
+              // Two buttons layout
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          onSecondaryPressed ?? () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        side: const BorderSide(color: Color(0xFF132054)),
+                      ),
+                      child: Text(
+                        secondaryButtonText!,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF132054),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                child: Text(
-                  buttonText,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: onPressed,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF132054),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        buttonText ?? 'OK',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ] else if (!isLoading) ...[
+              // Single button layout
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: onPressed,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF132054),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    buttonText ?? 'OK',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
