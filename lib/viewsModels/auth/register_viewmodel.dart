@@ -22,14 +22,14 @@ class RegisterViewModel extends ChangeNotifier {
   final TextEditingController phoneController = TextEditingController();
 
   // Default avatar
-  static const String defaultAvatarUrl = 'assets/icons/default_avatar.png';
+  static const String defaultAvatarUrl = 'assets/images/default_avatar.png';
 
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   DateTime? get selectedDate => _selectedDate;
 
-  // Method untuk update tanggal
+  // Update tanggal
   void updateBirthDate(DateTime date) {
     _selectedDate = date;
     birthDateController.text = DateFormat('dd/MM/yyyy').format(date);
@@ -40,9 +40,7 @@ class RegisterViewModel extends ChangeNotifier {
     if (!_validateInputs()) return false;
 
     try {
-      _isLoading = true;
-      _errorMessage = null;
-      notifyListeners();
+      _setLoading(true);
 
       // Register dengan Firebase Auth
       UserCredential userCredential = await _authService.register(
@@ -50,7 +48,7 @@ class RegisterViewModel extends ChangeNotifier {
         passwordController.text.trim(),
       );
 
-      // Buat model user dengan default avatar
+      // Buat user model dengan role user
       final user = UserModel(
         id: userCredential.user!.uid,
         email: emailController.text.trim(),
@@ -58,21 +56,31 @@ class RegisterViewModel extends ChangeNotifier {
         address: addressController.text.trim(),
         birthDate: _selectedDate!,
         phoneNumber: phoneController.text.trim(),
-        photoUrl: defaultAvatarUrl, // Gunakan default avatar
+        photoUrl: defaultAvatarUrl,
+        role: 'user', // Set role sebagai user
+        createdAt: DateTime.now(),
       );
 
       // Simpan data user ke Firestore
       await _firestoreService.saveUserData(user);
 
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
       return true;
     } catch (e) {
-      _isLoading = false;
-      _errorMessage = _getErrorMessage(e);
-      notifyListeners();
+      _setLoading(false);
+      _setError(_getErrorMessage(e));
       return false;
     }
+  }
+
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  void _setError(String message) {
+    _errorMessage = message;
+    notifyListeners();
   }
 
   bool _validateInputs() {
@@ -82,30 +90,26 @@ class RegisterViewModel extends ChangeNotifier {
         addressController.text.isEmpty ||
         _selectedDate == null ||
         phoneController.text.isEmpty) {
-      _errorMessage = 'Semua field harus diisi';
-      notifyListeners();
+      _setError('Semua field harus diisi');
       return false;
     }
 
     // Validasi email
     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
         .hasMatch(emailController.text)) {
-      _errorMessage = 'Format email tidak valid';
-      notifyListeners();
+      _setError('Format email tidak valid');
       return false;
     }
 
     // Validasi password (minimal 6 karakter)
     if (passwordController.text.length < 6) {
-      _errorMessage = 'Password minimal 6 karakter';
-      notifyListeners();
+      _setError('Password minimal 6 karakter');
       return false;
     }
 
     // Validasi nomor telepon (hanya angka)
     if (!RegExp(r'^[0-9]+$').hasMatch(phoneController.text)) {
-      _errorMessage = 'Nomor telepon hanya boleh berisi angka';
-      notifyListeners();
+      _setError('Nomor telepon hanya boleh berisi angka');
       return false;
     }
 
@@ -114,16 +118,14 @@ class RegisterViewModel extends ChangeNotifier {
       final DateTime now = DateTime.now();
       final DateTime minAge = DateTime(now.year - 13, now.month, now.day);
       if (_selectedDate!.isAfter(minAge)) {
-        _errorMessage = 'Umur minimal 13 tahun';
-        notifyListeners();
+        _setError('Umur minimal 13 tahun');
         return false;
       }
     }
 
     // Validasi nama (tidak boleh mengandung angka atau karakter khusus)
     if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(nameController.text)) {
-      _errorMessage = 'Nama hanya boleh berisi huruf';
-      notifyListeners();
+      _setError('Nama hanya boleh berisi huruf');
       return false;
     }
 
@@ -145,7 +147,7 @@ class RegisterViewModel extends ChangeNotifier {
           return 'Terjadi kesalahan: ${e.message}';
       }
     }
-    return 'Terjadi kesalahan: $e';
+    return e.toString();
   }
 
   void clearError() {

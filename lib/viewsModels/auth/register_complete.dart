@@ -45,6 +45,7 @@ class CompleteProfileViewModel extends ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
+      // Create user dengan role 'user'
       final user = UserModel(
         id: _userData['id'],
         email: emailController.text.trim(),
@@ -53,6 +54,8 @@ class CompleteProfileViewModel extends ChangeNotifier {
         birthDate: _selectedDate,
         phoneNumber: phoneController.text.trim(),
         photoUrl: _userData['photoUrl'],
+        role: 'user', // Tambahkan role
+        createdAt: DateTime.now(), // Tambahkan timestamp
       );
 
       // Save to Firestore
@@ -102,6 +105,10 @@ class CompleteProfileViewModel extends ChangeNotifier {
   }
 
   String _getErrorMessage(dynamic e) {
+    // Specific error handling untuk permission denied
+    if (e.toString().contains('permission-denied')) {
+      return 'Akses ditolak. Silakan coba logout dan login kembali.';
+    }
     if (e is Exception) {
       return 'Terjadi kesalahan: ${e.toString()}';
     }

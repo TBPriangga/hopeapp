@@ -10,6 +10,8 @@ class UserModel {
   final String? phoneNumber;
   final String? photoUrl;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final String role;
 
   UserModel({
     required this.id,
@@ -20,6 +22,8 @@ class UserModel {
     this.phoneNumber,
     this.photoUrl,
     this.createdAt,
+    this.updatedAt,
+    this.role = 'user',
   });
 
   // Konversi dari Firestore
@@ -36,6 +40,8 @@ class UserModel {
       phoneNumber: map['phoneNumber'],
       photoUrl: map['photoUrl'],
       createdAt: map['createdAt']?.toDate(),
+      updatedAt: map['updatedAt']?.toDate(),
+      role: map['role'] ?? 'user',
     );
   }
 
@@ -50,7 +56,9 @@ class UserModel {
           : null,
       'phoneNumber': phoneNumber,
       'photoUrl': photoUrl,
-      'createdAt': FieldValue.serverTimestamp(),
+      'role': role,
+      'createdAt': createdAt ?? FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     };
   }
 
@@ -62,16 +70,69 @@ class UserModel {
     DateTime? birthDate,
     String? phoneNumber,
     String? photoUrl,
+    String? role,
+    DateTime? updatedAt,
   }) {
     return UserModel(
-      id: this.id,
+      id: id,
       email: email ?? this.email,
       name: name ?? this.name,
       address: address ?? this.address,
       birthDate: birthDate ?? this.birthDate,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       photoUrl: photoUrl ?? this.photoUrl,
-      createdAt: this.createdAt,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      role: role ?? this.role,
     );
+  }
+
+  // Helper method untuk check role
+  bool get isUser => role == 'user';
+  bool get isAdmin => role == 'admin';
+
+  // Helper method untuk format tanggal
+  String get formattedBirthDate {
+    if (birthDate == null) return '';
+    return DateFormat('dd/MM/yyyy').format(birthDate!);
+  }
+
+  // Helper method untuk validasi data
+  bool get isValidUser {
+    return email.isNotEmpty &&
+        name.isNotEmpty &&
+        (phoneNumber == null || phoneNumber!.length <= 15);
+  }
+
+  // Helper method untuk compare users
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is UserModel &&
+        other.id == id &&
+        other.email == email &&
+        other.name == name &&
+        other.address == address &&
+        other.birthDate == birthDate &&
+        other.phoneNumber == phoneNumber &&
+        other.photoUrl == photoUrl &&
+        other.role == role;
+  }
+
+  @override
+  int get hashCode {
+    return id.hashCode ^
+        email.hashCode ^
+        name.hashCode ^
+        address.hashCode ^
+        birthDate.hashCode ^
+        phoneNumber.hashCode ^
+        photoUrl.hashCode ^
+        role.hashCode;
+  }
+
+  @override
+  String toString() {
+    return 'UserModel(id: $id, name: $name, email: $email, role: $role)';
   }
 }

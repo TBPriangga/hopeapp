@@ -1,4 +1,3 @@
-// services/auth_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -6,14 +5,25 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Login dengan email dan password
   Future<UserCredential> login(String email, String password) async {
     try {
-      return await _auth.signInWithEmailAndPassword(
+      // Login dengan Firebase Auth
+      final credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      // Verifikasi bahwa user bukan admin
+      final isAdmin = await _isAdmin(credential.user!.uid);
+      if (isAdmin) {
+        await _auth.signOut();
+        throw Exception('Admin tidak dapat login melalui aplikasi mobile');
+      }
+
+      return credential;
     } catch (e) {
       throw Exception('Failed to login: $e');
     }
@@ -22,10 +32,19 @@ class AuthService {
   // Register dengan email dan password
   Future<UserCredential> register(String email, String password) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(
+      // Register user baru
+      final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      // Pastikan user baru tidak didaftarkan sebagai admin
+      if (await _isAdmin(credential.user!.uid)) {
+        await _auth.signOut();
+        throw Exception('Invalid registration attempt');
+      }
+
+      return credential;
     } catch (e) {
       throw Exception('Failed to register: $e');
     }
@@ -49,23 +68,60 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      // Once signed in, return the UserCredential
-      return await _auth.signInWithCredential(credential);
+      // Sign in ke Firebase
+      final userCredential = await _auth.signInWithCredential(credential);
+
+      // Verifikasi bahwa user bukan admin
+      final isAdmin = await _isAdmin(userCredential.user!.uid);
+      if (isAdmin) {
+        await _auth.signOut();
+        throw Exception('Admin tidak dapat login melalui aplikasi mobile');
+      }
+
+      return userCredential;
     } catch (e) {
       throw Exception('Failed to sign in with Google: $e');
+    }
+  }
+
+  // Check if user is admin
+  Future<bool> _isAdmin(String userId) async {
+    try {
+      final doc = await _firestore.collection('admins').doc(userId).get();
+      return doc.exists && doc.data()?['status'] == 'active';
+    } catch (e) {
+      print('Error checking admin status: $e');
+      return false;
     }
   }
 
   // Check if user exists in Firestore
   Future<bool> isNewUser(String userId) async {
     try {
-      final docSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .get();
+      final docSnapshot =
+          await _firestore.collection('users').doc(userId).get();
+
+      // Jika user sudah ada di collection admins, throw error
+      if (await _isAdmin(userId)) {
+        throw Exception('Admin account detected');
+      }
+
       return !docSnapshot.exists;
     } catch (e) {
       throw Exception('Failed to check user existence: $e');
+    }
+  }
+
+  // Get user role
+  Future<String> getUserRole(String userId) async {
+    try {
+      if (await _isAdmin(userId)) return 'admin';
+
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      return userDoc.data()?['role'] ?? 'user';
+    } catch (e) {
+      print('Error getting user role: $e');
+      return 'user';
     }
   }
 
@@ -110,4 +166,15 @@ class AuthService {
 
   // Stream untuk mendengarkan perubahan status auth
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // Helper method untuk validasi role
+  Future<bool> validateUserRole(String userId) async {
+    try {
+      final role = await getUserRole(userId);
+      return role == 'user'; // true jika user biasa, false jika admin
+    } catch (e) {
+      print('Error validating user role: $e');
+      return false;
+    }
+  }
 }

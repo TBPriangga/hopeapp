@@ -7,11 +7,11 @@ class ProfileAvatar extends StatelessWidget {
   final bool isLocalImage;
 
   const ProfileAvatar({
-    Key? key,
+    super.key,
     this.photoUrl,
     this.radius = 40,
     this.isLocalImage = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

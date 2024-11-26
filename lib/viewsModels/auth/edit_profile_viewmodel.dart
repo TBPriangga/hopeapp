@@ -73,7 +73,7 @@ class EditProfileViewModel extends ChangeNotifier {
     }
   }
 
-  // Upload image to Firebase Storage
+// Upload image to Firebase Storage
   Future<String?> _uploadImage() async {
     if (_selectedImage == null) return _userData?.photoUrl;
 
@@ -81,10 +81,16 @@ class EditProfileViewModel extends ChangeNotifier {
       _isUploadingImage = true;
       notifyListeners();
 
+      final user = _authService.currentUser;
+      if (user == null) throw Exception('User not found');
+
       final String fileName =
-          'profile_${_authService.currentUser?.uid}_${DateTime.now().millisecondsSinceEpoch}${path.extension(_selectedImage!.path)}';
-      final Reference storageRef =
-          _storage.ref().child('profile_images/$fileName');
+          'profile_${DateTime.now().millisecondsSinceEpoch}${path.extension(_selectedImage!.path)}';
+      final Reference storageRef = _storage
+          .ref()
+          .child('profile_images')
+          .child(user.uid)
+          .child(fileName);
 
       final UploadTask uploadTask = storageRef.putFile(_selectedImage!);
 
