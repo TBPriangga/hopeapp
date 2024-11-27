@@ -1,194 +1,269 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class DetailSermonScreen extends StatelessWidget {
+import '../../../viewsModels/sermon/sermon_viewmodel.dart';
+
+class DetailSermonScreen extends StatefulWidget {
   const DetailSermonScreen({super.key});
 
   @override
+  State<DetailSermonScreen> createState() => _DetailSermonScreenState();
+}
+
+class _DetailSermonScreenState extends State<DetailSermonScreen> {
+  String? _sermonId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_sermonId == null) {
+      _sermonId = ModalRoute.of(context)?.settings.arguments as String?;
+      if (_sermonId != null) {
+        Future.microtask(
+            () => context.read<SermonViewModel>().loadSermonDetail(_sermonId!));
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF132054),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Sermon',
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        actions: const [
-          IconButton(
-            icon: Icon(Icons.bookmark_border_outlined, color: Colors.white),
-            onPressed: null,
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
+    return Consumer<SermonViewModel>(
+      builder: (context, viewModel, child) {
+        if (viewModel.isLoadingDetail) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (viewModel.detailError != null) {
+          return Scaffold(
+            body: Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Hikmat Dalam Berbagai Persoalan',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Text(
-                        '24-10-2023',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        '1 minggu yang lalu',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Spacer(),
-                      Icon(Icons.remove_red_eye, size: 16, color: Colors.grey),
-                      SizedBox(width: 4),
-                      Text(
-                        '1045',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(Icons.bookmark_border, size: 16),
-                    ],
+                  Text('Error: ${viewModel.detailError}'),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_sermonId != null) {
+                        viewModel.loadSermonDetail(_sermonId!);
+                      }
+                    },
+                    child: const Text('Coba Lagi'),
                   ),
                 ],
               ),
             ),
-            Image.asset(
-              'assets/dummy/sermon_carousel.png',
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
+          );
+        }
+
+        final sermon = viewModel.selectedSermon;
+        if (sermon == null) {
+          return const Scaffold(
+            body: Center(child: Text('Khotbah tidak ditemukan')),
+          );
+        }
+
+        return PopScope(
+          canPop: true,
+          onPopInvoked: (didPop) {
+            if (didPop) {
+              viewModel.clearSelectedSermon();
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              backgroundColor: const Color(0xFF132054),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                onPressed: () {
+                  viewModel.clearSelectedSermon();
+                  Navigator.pop(context);
+                },
+              ),
+              title: const Text(
+                'Sermon',
+                style: TextStyle(color: Colors.white),
+              ),
+              centerTitle: true,
+              actions: const [
+                IconButton(
+                  icon:
+                      Icon(Icons.bookmark_border_outlined, color: Colors.white),
+                  onPressed: null,
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            body: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Bacaan : MATIUS 5:38-42',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          sermon.title,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Text(
+                              sermon.formattedDate,
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              sermon.timeAgo,
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const Spacer(),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.bookmark_border, size: 16),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Saya takjub mendengar cerita seorang penyiar radio senior yang terlihat begitu mengenal para pendengar setianya. Ia bahkan mengetahui kalau ada pendengarnya yang absen untuk menelepon atau berkirim pesan lewat WhatsApp, lalu segera menanyakan kabar ketika orang tersebut kembali muncul saat ia siaran...',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'BEKERJA DENGAN CARA BERBEDA LAHIR DARI HATI, TAK HANYA DARI KEMAMPUAN DAN KEPANDAIAN.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF132054),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Sermon Lainnya',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
+                  Image.network(
+                    sermon.imageDetailUrl,
+                    width: double.infinity,
                     height: 200,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 3,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          width: 300,
-                          margin: const EdgeInsets.only(right: 16),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            image: const DecorationImage(
-                              image: AssetImage(
-                                  'assets/dummy/sermon_carousel.png'),
-                              fit: BoxFit.cover,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: double.infinity,
+                        height: 200,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.error),
+                      );
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Pembicara: ${sermon.preacher}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          sermon.description,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 24),
+                        if (viewModel.relatedSermons.isNotEmpty) ...[
+                          const Text(
+                            'Sermon Lainnya',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          child: Stack(
-                            children: [
-                              // Layer shadow/overlay di tengah bawah
-                              Positioned(
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                child: Container(
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    borderRadius: const BorderRadius.vertical(
-                                      bottom: Radius.circular(8),
-                                    ),
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.transparent,
-                                        Colors.black.withOpacity(0.7),
-                                        Colors.black.withOpacity(0.8),
-                                      ],
-                                      stops: const [0.0, 0.5, 1.0],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // Layer content
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                child: const Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'HIKMAT DALAM BERBAGAI PERSOALAN PERNIKAHAN',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            height: 200,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: viewModel.relatedSermons.length,
+                              itemBuilder: (context, index) {
+                                final relatedSermon =
+                                    viewModel.relatedSermons[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    viewModel
+                                        .loadSermonDetail(relatedSermon.id);
+                                  },
+                                  child: Container(
+                                    width: 300,
+                                    margin: const EdgeInsets.only(right: 16),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      image: DecorationImage(
+                                        image: NetworkImage(
+                                            relatedSermon.imageDetailUrl),
+                                        fit: BoxFit.cover,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                                    child: Stack(
+                                      children: [
+                                        Positioned(
+                                          bottom: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: Container(
+                                            height: 120,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  const BorderRadius.vertical(
+                                                bottom: Radius.circular(8),
+                                              ),
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  Colors.transparent,
+                                                  Colors.black.withOpacity(0.7),
+                                                  Colors.black.withOpacity(0.8),
+                                                ],
+                                                stops: const [0.0, 0.5, 1.0],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                relatedSermon.title,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        );
-                      },
+                        ],
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

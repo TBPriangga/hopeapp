@@ -3,7 +3,7 @@ import 'package:path/path.dart' as path;
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../core/services/auth_service.dart';
+import '../../core/services/auth/auth_service.dart';
 import '../../core/services/firestore_service.dart';
 import '../../models/user_model.dart';
 import 'package:intl/intl.dart';

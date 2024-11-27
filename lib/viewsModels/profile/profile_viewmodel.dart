@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/services/auth_service.dart';
+import '../../core/services/auth/auth_service.dart';
 import '../../core/services/firestore_service.dart';
 import '../../models/user_model.dart';
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../viewsModels/sermon/sermon_viewmodel.dart';
 
 class SermonScreen extends StatefulWidget {
   const SermonScreen({super.key});
@@ -9,30 +11,33 @@ class SermonScreen extends StatefulWidget {
 }
 
 class _SermonScreenState extends State<SermonScreen> {
-  final PageController _pageController = PageController();
-  int _currentIndex = 0;
-
   @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SermonViewModel>().loadSermons();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: const Color(0xFF132054),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Center(
-          child: Text(
-            'Sermon',
-            style: TextStyle(color: Colors.white),
+        title: const Text(
+          'Sermon',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
           ),
         ),
+        centerTitle: true,
         actions: [
           IconButton(
             icon:
@@ -43,219 +48,205 @@ class _SermonScreenState extends State<SermonScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          // Carousel/Banner
-          SizedBox(
-            height: 200,
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              itemCount: 5,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: const DecorationImage(
-                      image: AssetImage('assets/dummy/sermon_carousel.png'),
-                      fit: BoxFit.cover,
+      body: Consumer<SermonViewModel>(
+        builder: (context, viewModel, child) {
+          if (viewModel.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (viewModel.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Error: ${viewModel.error}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => viewModel.loadSermons(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Coba Lagi'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF132054),
+                      foregroundColor: Colors.white,
                     ),
                   ),
-                  child: Stack(
+                ],
+              ),
+            );
+          }
+
+          final sermons = viewModel.sermons;
+
+          if (sermons.isEmpty) {
+            return const Center(
+              child: Text(
+                'Tidak ada khotbah tersedia',
+                style: TextStyle(color: Colors.grey),
+              ),
+            );
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                // Header dengan Sort
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Layer shadow/overlay di tengah bawah
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          height: 120, // Sesuaikan tinggi shadow
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.vertical(
-                                bottom: Radius.circular(
-                                    8)), // Tambahkan border radius di sini
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.7),
-                                Colors.black.withOpacity(0.8),
-                              ],
-                              stops: const [0.0, 0.5, 1.0],
-                            ),
-                          ),
+                      Text(
+                        'Daftar Khotbah',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
                         ),
                       ),
-                      // Layer content
                       Container(
-                        padding: const EdgeInsets.all(16),
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'HIKMAT DALAM BERBAGAI PERSOALAN PERNIKAHAN',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: DropdownButton<String>(
+                          value: viewModel.sortBy,
+                          hint: const Text('Urutkan'),
+                          underline: const SizedBox.shrink(),
+                          icon: const Icon(Icons.keyboard_arrow_down),
+                          isDense: true,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'terbaru',
+                              child: Text('Terbaru'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'terlama',
+                              child: Text('Terlama'),
                             ),
                           ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              viewModel.setSortBy(value);
+                            }
+                          },
                         ),
                       ),
                     ],
                   ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Dots Indicator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              5,
-              (index) => GestureDetector(
-                onTap: () {
-                  _pageController.animateToPage(
-                    index,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentIndex == index
-                        ? const Color(0xFF2B478A)
-                        : Colors.grey,
-                  ),
                 ),
-              ),
-            ),
-          ),
 
-          const SizedBox(height: 20),
-
-          // Dropdown Filter
-          DropdownButton<String>(
-            hint: const Text('Urutkan Berdasarkan'),
-            underline: const SizedBox.shrink(),
-            items: const [
-              DropdownMenuItem(
-                value: 'terbaru',
-                child: Text('Terbaru'),
-              ),
-              DropdownMenuItem(
-                value: 'terlama',
-                child: Text('Terlama'),
-              ),
-            ],
-            onChanged: (value) {
-              // Handle filter
-            },
-          ),
-
-          const SizedBox(height: 20),
-
-          ListView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemCount: 5,
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.detailSermon);
-                },
-                child: Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        // Thumbnail
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            image: const DecorationImage(
-                              image:
-                                  AssetImage('assets/dummy/sermon_thumb.png'),
-                              fit: BoxFit.cover,
+                // List Sermon
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    itemCount: sermons.length,
+                    itemBuilder: (context, index) {
+                      final sermon = sermons[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.detailSermon,
+                              arguments: sermon.id,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                // Thumbnail
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    sermon.imageUrl,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                      width: 100,
+                                      height: 100,
+                                      color: Colors.grey[200],
+                                      child: const Icon(Icons.error_outline),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                // Content
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        sermon.formattedDate,
+                                        style: TextStyle(
+                                          color: Colors.blue[700],
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        sermon.title,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          height: 1.3,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        sermon.timeAgo,
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Bookmark Icon
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.bookmark_border,
+                                    color: Colors.grey[600],
+                                  ),
+                                  onPressed: () {
+                                    // TODO: Implement bookmark
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        // Content
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '24 Oktober 2023',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Hikmat Dalam Berbagai Persoalan Pernikahan',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Text(
-                                    '1 minggu yang lalu',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.remove_red_eye,
-                                      size: 16, color: Colors.grey),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    '1045',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Bookmark Icon
-                        const Icon(Icons.bookmark_border, size: 24),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
-              );
-            },
-          ),
-        ],
+              ],
+            ),
+          );
+        },
       ),
     );
   }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/routes/app_routes.dart';
-import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/auth/auth_service.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../../../core/utils/dialog_helper.dart';
 import '../../../../viewsModels/profile/profile_viewmodel.dart';
