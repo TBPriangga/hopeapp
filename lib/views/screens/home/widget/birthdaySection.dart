@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../viewsModels/home/birthday_viewmodel.dart';
+import 'birthdayPopup.dart';
 
 class BirthdaySection extends StatefulWidget {
   const BirthdaySection({super.key});
@@ -16,6 +17,13 @@ class _BirthdaySectionState extends State<BirthdaySection> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<BirthdayViewModel>().loadWeeklyBirthdays();
     });
+  }
+
+  void _showBirthdayPopup(BuildContext context, birthday) {
+    showDialog(
+      context: context,
+      builder: (context) => BirthdayPopup(birthday: birthday),
+    );
   }
 
   @override
@@ -98,34 +106,38 @@ class _BirthdaySectionState extends State<BirthdaySection> {
                   itemCount: viewModel.birthdays.length,
                   itemBuilder: (context, index) {
                     final person = viewModel.birthdays[index];
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        left: index == 0 ? 0 : 16,
-                        right: index == viewModel.birthdays.length - 1 ? 0 : 16,
-                      ),
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundImage: person.photoUrl != null
-                                ? NetworkImage(person.photoUrl!)
-                                : const AssetImage(
-                                    'assets/images/default_avatar.png',
-                                  ) as ImageProvider,
-                            backgroundColor: Colors.grey[200],
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: 60,
-                            child: Text(
-                              person.name,
-                              style: const TextStyle(fontSize: 12),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                    return GestureDetector(
+                      onTap: () => _showBirthdayPopup(context, person),
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          left: index == 0 ? 0 : 16,
+                          right:
+                              index == viewModel.birthdays.length - 1 ? 0 : 16,
+                        ),
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundImage: person.photoUrl != null
+                                  ? NetworkImage(person.photoUrl!)
+                                  : const AssetImage(
+                                      'assets/images/default_avatar.png',
+                                    ) as ImageProvider,
+                              backgroundColor: Colors.grey[200],
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: 60,
+                              child: Text(
+                                person.name,
+                                style: const TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },

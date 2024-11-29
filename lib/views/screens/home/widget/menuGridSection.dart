@@ -28,9 +28,7 @@ class MenuGridSection extends StatelessWidget {
                   ),
                 ),
                 child: Stack(
-                  // Ubah ke Stack
                   children: [
-                    // Gradient overlay
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
@@ -44,7 +42,6 @@ class MenuGridSection extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Content
                     const Padding(
                       padding: EdgeInsets.all(16),
                       child: Column(
@@ -61,7 +58,6 @@ class MenuGridSection extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Play icon and Watch Here text at bottom
                     const Positioned(
                       left: 16,
                       bottom: 16,
@@ -96,64 +92,68 @@ class MenuGridSection extends StatelessWidget {
             child: Column(
               children: [
                 // Prayer Request
-                Container(
-                  height: 142,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    image: const DecorationImage(
-                      image: AssetImage('assets/images/pray.png'),
-                      fit: BoxFit.cover,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRoutes.prayerRequest);
+                  },
+                  child: Container(
+                    height: 142,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/images/pray.png'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ),
-                  child: Stack(
-                    // Ubah ke Stack
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.6),
-                              Colors.transparent,
+                    child: Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withOpacity(0.6),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Prayer Request',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Prayer Request',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
+                        const Positioned(
+                          left: 16,
+                          bottom: 16,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Let\'s Pray Together',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const Positioned(
-                        left: 16,
-                        bottom: 16,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Let\'s Pray Together',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -168,7 +168,6 @@ class MenuGridSection extends StatelessWidget {
                     ),
                   ),
                   child: Stack(
-                    // Ubah ke Stack
                     children: [
                       Container(
                         decoration: BoxDecoration(

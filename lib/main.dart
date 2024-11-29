@@ -10,20 +10,24 @@ import 'package:hopeapp/viewsModels/auth/register_viewmodel.dart';
 import 'package:hopeapp/viewsModels/splash/splash_viewmodel.dart';
 import 'package:hopeapp/viewsModels/home/birthday_viewmodel.dart';
 import 'package:hopeapp/viewsModels/home/carousel_viewmodel.dart';
+import 'package:hopeapp/viewsModels/youtube/youtube_viewmodel.dart';
 
 // Services
 import 'package:hopeapp/core/services/auth/auth_service.dart';
+import 'package:hopeapp/core/services/youtube/youtube_service.dart';
 
 // Routes
 import 'app/routes/app_routes.dart';
+import 'core/services/home/dailyWord_service.dart';
 import 'viewsModels/auth/edit_profile_viewmodel.dart';
 import 'viewsModels/event/event_viewmodel.dart';
+import 'viewsModels/home/dailyWord_viewmodel.dart';
 import 'viewsModels/sermon/sermon_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await initializeDateFormatting('id_ID', null); // Initialize locale
+  await initializeDateFormatting('id_ID', null);
   runApp(const MyApp());
 }
 
@@ -38,6 +42,13 @@ class MyApp extends StatelessWidget {
         Provider<AuthService>(
           create: (_) => AuthService(),
         ),
+        Provider<YouTubeService>(
+          // Add this
+          create: (_) => YouTubeService(),
+        ),
+        Provider<DailyWordService>(
+          create: (_) => DailyWordService(),
+        ),
 
         // ViewModels
         ChangeNotifierProvider(create: (_) => SplashViewModel()),
@@ -48,6 +59,16 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BirthdayViewModel()),
         ChangeNotifierProvider(create: (_) => EventViewModel()),
         ChangeNotifierProvider(create: (_) => SermonViewModel()),
+        ChangeNotifierProvider(
+          create: (context) => YouTubeViewModel(
+            youtubeService: context.read<YouTubeService>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => DailyWordViewModel(
+            dailyWordService: context.read<DailyWordService>(),
+          ),
+        ),
       ],
       child: MaterialApp(
         title: 'Hope App',
@@ -60,7 +81,6 @@ class MyApp extends StatelessWidget {
             primary: const Color(0xFF132054),
           ),
         ),
-        // Add Localization Support
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
