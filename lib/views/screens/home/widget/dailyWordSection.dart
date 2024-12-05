@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../models/home/daily_word_model.dart';
-import '../../../../viewsModels/home/dailyWord_viewmodel.dart';
-import 'dailyWordPopUp.dart';
+import '../../../../app/routes/app_routes.dart';
+import '../../../../viewsModels/dailyWords/dailyWord_viewmodel.dart';
 
 class DailyWordSection extends StatefulWidget {
   const DailyWordSection({super.key});
@@ -19,13 +18,6 @@ class _DailyWordSectionState extends State<DailyWordSection> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DailyWordViewModel>().loadDailyWord();
     });
-  }
-
-  void _showDailyWordPopup(BuildContext context, DailyWordModel dailyWord) {
-    showDialog(
-      context: context,
-      builder: (context) => DailyWordPopup(dailyWord: dailyWord),
-    );
   }
 
   @override
@@ -98,7 +90,11 @@ class _DailyWordSectionState extends State<DailyWordSection> {
         }
 
         return GestureDetector(
-          onTap: () => _showDailyWordPopup(context, dailyWord),
+          onTap: () => Navigator.pushNamed(
+            context,
+            AppRoutes.dailyWord,
+            arguments: dailyWord, // Menambahkan dailyWord sebagai argument
+          ),
           child: Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),

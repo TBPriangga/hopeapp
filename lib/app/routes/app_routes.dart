@@ -5,12 +5,15 @@ import 'package:hopeapp/views/screens/sermons/sermon_screen.dart';
 import '../../views/screens/auth/complete_register_screen.dart';
 import '../../views/screens/auth/login_screen.dart';
 import '../../views/screens/auth/register_screen.dart';
+import '../../views/screens/dailyword/dailyWord_listScreen.dart';
+import '../../views/screens/dailyword/dailyWord_screen.dart';
 import '../../views/screens/event/screen/detail_event_screen.dart';
 import '../../views/screens/event/screen/empty_event_screen.dart';
 import '../../views/screens/event/screen/event_screen.dart';
 import '../../views/screens/form/baptis_form.dart';
 import '../../views/screens/form/conseling_form.dart';
 import '../../views/screens/form/discipleship_form.dart';
+import '../../views/screens/form/form_screen.dart';
 import '../../views/screens/form/offering_info.dart';
 import '../../views/screens/form/prayer_request.dart';
 import '../../views/screens/form/wedding_form.dart';
@@ -45,6 +48,9 @@ class AppRoutes {
   static const String youtube = '/youtube';
   static const String counseling = '/counseling';
   static const String discipleship = '/discipleship';
+  static const String form = '/form';
+  static const String dailyWord = '/daily-word';
+  static const String dailyWordList = '/daily-word-list';
 
   static Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
@@ -72,5 +78,8 @@ class AppRoutes {
     youtube: (context) => const YouTubeScreen(),
     counseling: (context) => const CounselingScreen(),
     discipleship: (context) => const DiscipleshipScreen(),
+    form: (context) => const FormScreen(),
+    dailyWord: (context) => const DailyWordScreen(),
+    dailyWordList: (context) => const DailyWordListScreen(),
   };
 }

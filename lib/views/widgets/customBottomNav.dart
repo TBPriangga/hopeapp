@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../app/routes/app_routes.dart';
 
 class CustomBottomNav extends StatelessWidget {
@@ -18,16 +17,15 @@ class CustomBottomNav extends StatelessWidget {
       currentIndex: selectedIndex,
       onTap: (index) {
         onItemTapped(index);
-        // Handle navigation based on index
         switch (index) {
           case 0:
             Navigator.pushReplacementNamed(context, AppRoutes.home);
             break;
           case 1:
-            // Handle Add navigation
+            Navigator.pushReplacementNamed(context, AppRoutes.form);
             break;
           case 2:
-            // Handle Menu navigation
+            Navigator.pushReplacementNamed(context, AppRoutes.dailyWordList);
             break;
           case 3:
             Navigator.pushReplacementNamed(context, AppRoutes.profile);
@@ -44,14 +42,14 @@ class CustomBottomNav extends StatelessWidget {
           label: 'Home',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.add_box_outlined),
-          activeIcon: Icon(Icons.add_box),
-          label: 'Add',
+          icon: Icon(Icons.description_outlined),
+          activeIcon: Icon(Icons.description),
+          label: 'Forms',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.menu),
-          activeIcon: Icon(Icons.menu),
-          label: 'Menu',
+          icon: Icon(Icons.menu_book_outlined),
+          activeIcon: Icon(Icons.menu_book),
+          label: 'Daily Word',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),

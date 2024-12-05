@@ -68,13 +68,6 @@ class ServiceGridSection extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          const Text(
-            'PELAYANAN',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
           const SizedBox(height: 16),
           GridView.builder(
             shrinkWrap: true,

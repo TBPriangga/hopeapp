@@ -20,8 +20,9 @@ import 'package:hopeapp/core/services/youtube/youtube_service.dart';
 import 'app/routes/app_routes.dart';
 import 'core/services/home/dailyWord_service.dart';
 import 'viewsModels/auth/edit_profile_viewmodel.dart';
+import 'viewsModels/dailyWords/dailyWordList_viewmodel.dart';
+import 'viewsModels/dailyWords/dailyWord_viewmodel.dart';
 import 'viewsModels/event/event_viewmodel.dart';
-import 'viewsModels/home/dailyWord_viewmodel.dart';
 import 'viewsModels/sermon/sermon_viewmodel.dart';
 
 void main() async {
@@ -66,6 +67,11 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => DailyWordViewModel(
+            dailyWordService: context.read<DailyWordService>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => DailyWordListViewModel(
             dailyWordService: context.read<DailyWordService>(),
           ),
         ),

@@ -28,4 +28,56 @@ class DailyWordService {
       throw Exception('Failed to load daily word: $e');
     }
   }
+
+  Future<List<DailyWordModel>> getPastDailyWords({
+    DailyWordModel? lastDocument,
+    int limit = 15,
+  }) async {
+    try {
+      Query query = _firestore
+          .collection('daily_words')
+          .where('isActive', isEqualTo: true)
+          .orderBy('date', descending: true)
+          .limit(limit);
+
+      if (lastDocument != null) {
+        query = query.startAfterDocument(
+          await _firestore.collection('daily_words').doc(lastDocument.id).get(),
+        );
+      }
+
+      final snapshot = await query.get();
+
+      return snapshot.docs
+          .map((doc) => DailyWordModel.fromMap(
+              doc.id, doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to load daily words: $e');
+    }
+  }
+
+  Future<List<DailyWordModel>> searchDailyWords(String query) async {
+    try {
+      final snapshot = await _firestore
+          .collection('daily_words')
+          .where('isActive', isEqualTo: true)
+          .orderBy('date', descending: true)
+          .get();
+
+      final results = snapshot.docs
+          .map((doc) => DailyWordModel.fromMap(
+              doc.id, doc.data() as Map<String, dynamic>))
+          .where((dailyWord) {
+        final verse = dailyWord.verse.toLowerCase();
+        final content = dailyWord.content.toLowerCase();
+        final searchQuery = query.toLowerCase();
+        return verse.contains(searchQuery) || content.contains(searchQuery);
+      }).toList();
+
+      return results;
+    } catch (e) {
+      throw Exception('Failed to search daily words: $e');
+    }
+  }
 }
