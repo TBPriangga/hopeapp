@@ -19,6 +19,7 @@ import 'package:hopeapp/core/services/youtube/youtube_service.dart';
 // Routes
 import 'app/routes/app_routes.dart';
 import 'core/services/home/dailyWord_service.dart';
+import 'viewsModels/about/about_viewmodel.dart';
 import 'viewsModels/auth/edit_profile_viewmodel.dart';
 import 'viewsModels/dailyWords/dailyWordList_viewmodel.dart';
 import 'viewsModels/dailyWords/dailyWord_viewmodel.dart';
@@ -75,6 +76,7 @@ class MyApp extends StatelessWidget {
             dailyWordService: context.read<DailyWordService>(),
           ),
         ),
+        ChangeNotifierProvider(create: (_) => AboutViewModel()),
       ],
       child: MaterialApp(
         title: 'Hope App',

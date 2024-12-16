@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../app/routes/app_routes.dart';
 import '../../widgets/customBottomNav.dart';
 
@@ -24,6 +25,9 @@ class _FormScreenState extends State<FormScreen> {
         break;
       case 3:
         Navigator.pushReplacementNamed(context, AppRoutes.profile);
+        break;
+      case 4:
+        Navigator.pushReplacementNamed(context, AppRoutes.about);
         break;
     }
   }
@@ -56,10 +60,10 @@ class _FormScreenState extends State<FormScreen> {
         'route': AppRoutes.weddingRegistration,
       },
       {
-        'icon': Icons.people,
-        'label': 'PEMURIDAN',
-        'description': 'Program Pemuridan',
-        'route': AppRoutes.discipleship,
+        'icon': Icons.school,
+        'label': 'KELAS PEMURIDAN',
+        'description': 'Program Kelas Pemuridan',
+        'route': AppRoutes.discipleshipClass,
       },
       {
         'icon': Icons.water,
@@ -79,7 +83,6 @@ class _FormScreenState extends State<FormScreen> {
               Color(0xFF132054),
               Color(0xFF2B478A),
             ],
-            stops: [0.0, 1.0],
           ),
         ),
         child: SafeArea(

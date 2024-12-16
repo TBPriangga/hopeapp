@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:hopeapp/views/screens/sermons/detail_sermon_screen.dart';
 import 'package:hopeapp/views/screens/sermons/save_sermon_screen.dart';
 import 'package:hopeapp/views/screens/sermons/sermon_screen.dart';
+import '../../views/screens/about/about_screen.dart';
 import '../../views/screens/auth/complete_register_screen.dart';
 import '../../views/screens/auth/login_screen.dart';
 import '../../views/screens/auth/register_screen.dart';
 import '../../views/screens/dailyword/dailyWord_listScreen.dart';
 import '../../views/screens/dailyword/dailyWord_screen.dart';
+import '../../views/screens/discipleship/discipleship.dart';
 import '../../views/screens/event/screen/detail_event_screen.dart';
 import '../../views/screens/event/screen/empty_event_screen.dart';
 import '../../views/screens/event/screen/event_screen.dart';
@@ -18,6 +20,7 @@ import '../../views/screens/form/offering_info.dart';
 import '../../views/screens/form/prayer_request.dart';
 import '../../views/screens/form/wedding_form.dart';
 import '../../views/screens/notifications/notifications_screen.dart';
+import '../../views/screens/offering/offering_report_screen.dart';
 import '../../views/screens/profile/screen/change_password.dart';
 import '../../views/screens/profile/screen/edit_profile_screen.dart';
 import '../../views/screens/profile/screen/profile_screen.dart';
@@ -51,6 +54,9 @@ class AppRoutes {
   static const String form = '/form';
   static const String dailyWord = '/daily-word';
   static const String dailyWordList = '/daily-word-list';
+  static const String about = '/about';
+  static const String discipleshipClass = '/discipleship-class';
+  static const String offeringReport = '/offering-report';
 
   static Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
@@ -81,5 +87,8 @@ class AppRoutes {
     form: (context) => const FormScreen(),
     dailyWord: (context) => const DailyWordScreen(),
     dailyWordList: (context) => const DailyWordListScreen(),
+    about: (context) => const AboutScreen(),
+    discipleshipClass: (context) => const DiscipleshipClassScreen(),
+    offeringReport: (context) => const OfferingReportScreen(),
   };
 }

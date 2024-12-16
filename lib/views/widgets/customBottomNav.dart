@@ -28,6 +28,9 @@ class CustomBottomNav extends StatelessWidget {
             Navigator.pushReplacementNamed(context, AppRoutes.dailyWordList);
             break;
           case 3:
+            Navigator.pushReplacementNamed(context, AppRoutes.about);
+            break;
+          case 4:
             Navigator.pushReplacementNamed(context, AppRoutes.profile);
             break;
         }
@@ -50,6 +53,11 @@ class CustomBottomNav extends StatelessWidget {
           icon: Icon(Icons.menu_book_outlined),
           activeIcon: Icon(Icons.menu_book),
           label: 'Daily Word',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.info_outline),
+          activeIcon: Icon(Icons.info),
+          label: 'About',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),

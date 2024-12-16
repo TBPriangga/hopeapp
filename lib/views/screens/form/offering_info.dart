@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+import '../../../app/routes/app_routes.dart';
 
 class OfferingInfoScreen extends StatelessWidget {
   const OfferingInfoScreen({super.key});
 
-  Future<void> _launchOfferingReport() async {
-    final Uri url = Uri.parse('https://link-to-offering-report');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      throw Exception('Could not launch $url');
-    }
+  Future<void> _launchOfferingReport(BuildContext context) async {
+    Navigator.pushNamed(context, AppRoutes.offeringReport);
   }
 
   @override
@@ -37,79 +33,12 @@ class OfferingInfoScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF132054),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(30),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade300,
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    'Persembahan Minggu Ini',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Update terakhir: ${DateTime.now().toString().substring(0, 10)}',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Column(
-                      children: [
-                        Text(
-                          'Total Persembahan',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Rp 15.750.000',
-                          style: TextStyle(
-                            color: Color(0xFF132054),
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
             // QRIS Section
             Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Modifikasi pada bagian QRIS Section
                   Text(
                     'Pembayaran Digital',
                     style: TextStyle(
@@ -117,13 +46,12 @@ class OfferingInfoScreen extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[800],
                     ),
-                    textAlign: TextAlign.center, // Tambahkan ini
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   Center(
-                    // Tambahkan Center widget
                     child: Container(
-                      width: 280, // Atur lebar container
+                      width: 280,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -186,7 +114,7 @@ class OfferingInfoScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: _launchOfferingReport,
+                      onPressed: () => _launchOfferingReport(context),
                       icon: const Icon(Icons.description),
                       label: const Text('Lihat Laporan Persembahan'),
                       style: ElevatedButton.styleFrom(
@@ -294,9 +222,7 @@ class OfferingInfoScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.copy),
-            onPressed: () {
-              // TODO: Implement copy to clipboard
-            },
+            onPressed: () {},
           ),
         ],
       ),

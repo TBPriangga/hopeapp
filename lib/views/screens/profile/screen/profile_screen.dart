@@ -17,7 +17,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final int _selectedIndex = 3;
+  final int _selectedIndex = 4;
   late ProfileViewModel _viewModel;
 
   @override
