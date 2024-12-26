@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../app/routes/app_routes.dart';
 import '../../../viewsModels/sermon/sermon_viewmodel.dart';
 import '../../../models/sermon/sermon_series_model.dart';
-import 'package:intl/intl.dart';
+import '../../../app/routes/app_routes.dart';
 
-class SermonScreen extends StatefulWidget {
-  const SermonScreen({super.key});
+class SermonSeriesScreen extends StatefulWidget {
+  const SermonSeriesScreen({super.key});
 
   @override
-  State<SermonScreen> createState() => _SermonScreenState();
+  State<SermonSeriesScreen> createState() => _SermonSeriesScreenState();
 }
 
-class _SermonScreenState extends State<SermonScreen> {
+class _SermonSeriesScreenState extends State<SermonSeriesScreen> {
   @override
   void initState() {
     super.initState();
+    // Load series when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SermonViewModel>().loadSermonSeries();
     });
@@ -27,6 +27,7 @@ class _SermonScreenState extends State<SermonScreen> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: const Color(0xFF132054),
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -40,15 +41,6 @@ class _SermonScreenState extends State<SermonScreen> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon:
-                const Icon(Icons.bookmark_border_outlined, color: Colors.white),
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.saveSermon);
-            },
-          ),
-        ],
       ),
       body: Consumer<SermonViewModel>(
         builder: (context, viewModel, child) {
@@ -81,13 +73,10 @@ class _SermonScreenState extends State<SermonScreen> {
             );
           }
 
-          final sermonSeries = viewModel.sermonSeries;
-          if (sermonSeries.isEmpty) {
+          final series = viewModel.sermonSeries;
+          if (series.isEmpty) {
             return const Center(
-              child: Text(
-                'Tidak ada series khotbah tersedia',
-                style: TextStyle(color: Colors.grey),
-              ),
+              child: Text('Tidak ada series khotbah tersedia'),
             );
           }
 
@@ -95,9 +84,9 @@ class _SermonScreenState extends State<SermonScreen> {
             onRefresh: () => viewModel.refresh(),
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: sermonSeries.length,
+              itemCount: series.length,
               itemBuilder: (context, index) {
-                return _buildSeriesCard(context, sermonSeries[index]);
+                return _buildSeriesCard(context, series[index]);
               },
             ),
           );
@@ -116,7 +105,7 @@ class _SermonScreenState extends State<SermonScreen> {
         onTap: () {
           Navigator.pushNamed(
             context,
-            AppRoutes.sermonSeriesDetail,
+            AppRoutes.sermonSeries,
             arguments: series.id,
           );
         },
@@ -167,40 +156,6 @@ class _SermonScreenState extends State<SermonScreen> {
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 12),
-                  // Date info
-                  Row(
-                    children: [
-                      Icon(Icons.calendar_today,
-                          size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 8),
-                      Text(
-                        DateFormat('MMMM yyyy', 'id_ID')
-                            .format(series.startDate),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (series.endDate != null) ...[
-                        Text(
-                          ' - ',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          DateFormat('MMMM yyyy', 'id_ID')
-                              .format(series.endDate!),
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ],
                   ),
                 ],
               ),

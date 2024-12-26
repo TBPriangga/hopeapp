@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
@@ -17,15 +18,41 @@ class AuthService {
       );
 
       // Verifikasi bahwa user bukan admin
-      final isAdmin = await _isAdmin(credential.user!.uid);
-      if (isAdmin) {
+      if (await _isAdmin(credential.user!.uid)) {
         await _auth.signOut();
         throw Exception('Admin tidak dapat login melalui aplikasi mobile');
       }
 
+      // Subscribe ke topics setelah login berhasil
+      await subscribeToNotificationTopics();
+
       return credential;
     } catch (e) {
       throw Exception('Failed to login: $e');
+    }
+  }
+
+  // Method untuk subscribe ke topics
+  Future<void> subscribeToNotificationTopics() async {
+    try {
+      await FirebaseMessaging.instance.subscribeToTopic('daily_word');
+      await FirebaseMessaging.instance.subscribeToTopic('events');
+      await FirebaseMessaging.instance.subscribeToTopic('birthdays');
+      print('Successfully subscribed to all notification topics');
+    } catch (e) {
+      print('Error subscribing to topics: $e');
+    }
+  }
+
+  // Method untuk unsubscribe dari topics
+  Future<void> unsubscribeFromNotificationTopics() async {
+    try {
+      await FirebaseMessaging.instance.unsubscribeFromTopic('daily_word');
+      await FirebaseMessaging.instance.unsubscribeFromTopic('events');
+      await FirebaseMessaging.instance.unsubscribeFromTopic('birthdays');
+      print('Successfully unsubscribed from all notification topics');
+    } catch (e) {
+      print('Error unsubscribing from topics: $e');
     }
   }
 
@@ -43,6 +70,9 @@ class AuthService {
         await _auth.signOut();
         throw Exception('Invalid registration attempt');
       }
+
+      // Subscribe ke topics setelah registrasi berhasil
+      await subscribeToNotificationTopics();
 
       return credential;
     } catch (e) {
@@ -77,6 +107,9 @@ class AuthService {
         await _auth.signOut();
         throw Exception('Admin tidak dapat login melalui aplikasi mobile');
       }
+
+      // Subscribe ke topics setelah login dengan Google berhasil
+      await subscribeToNotificationTopics();
 
       return userCredential;
     } catch (e) {
@@ -141,6 +174,10 @@ class AuthService {
           print('Signing out from Google...');
           await _googleSignIn.signOut();
         }
+
+        // Unsubscribe from topics
+        print('Unsubscribing from notification topics...');
+        await unsubscribeFromNotificationTopics();
       }
 
       print('Signing out from Firebase...');

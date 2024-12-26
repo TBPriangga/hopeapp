@@ -1,1 +1,41 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"hopeapp-513f1","appId":"1:318265479083:android:4ea340ed3988f1ae48ccee","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"hopeapp-513f1","configurations":{"android":"1:318265479083:android:4ea340ed3988f1ae48ccee","ios":"1:318265479083:ios:f399788269f2e47348ccee","macos":"1:318265479083:ios:f399788269f2e47348ccee","web":"1:318265479083:web:904a1e69eb86d57c48ccee","windows":"1:318265479083:web:a6d3e1f1a44a49f148ccee"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "hopeapp-513f1",
+          "appId": "1:318265479083:android:4ea340ed3988f1ae48ccee",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "hopeapp-513f1",
+          "configurations": {
+            "android": "1:318265479083:android:4ea340ed3988f1ae48ccee",
+            "ios": "1:318265479083:ios:f399788269f2e47348ccee",
+            "macos": "1:318265479083:ios:f399788269f2e47348ccee",
+            "web": "1:318265479083:web:904a1e69eb86d57c48ccee",
+            "windows": "1:318265479083:web:a6d3e1f1a44a49f148ccee"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
+}

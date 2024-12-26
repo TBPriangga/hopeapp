@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
-
 import '../../core/services/sermon/sermon_service.dart';
 import '../../models/sermon/sermon_model.dart';
+import '../../models/sermon/sermon_series_model.dart';
 
 class SermonViewModel extends ChangeNotifier {
-  final SermonService _sermonService = SermonService();
+  final SermonService _sermonService;
+
+  SermonViewModel({
+    required SermonService sermonService,
+  }) : _sermonService = sermonService;
+
+  // State untuk series
+  List<SermonSeries> _sermonSeries = [];
+  SermonSeries? _selectedSeries;
+  bool _isLoadingSeries = false;
+  String? _seriesError;
 
   // State untuk list sermon
   List<SermonModel> _sermons = [];
@@ -18,7 +28,13 @@ class SermonViewModel extends ChangeNotifier {
   bool _isLoadingDetail = false;
   String? _detailError;
 
-  // Getters
+  // Getters untuk series
+  List<SermonSeries> get sermonSeries => _sermonSeries;
+  SermonSeries? get selectedSeries => _selectedSeries;
+  bool get isLoadingSeries => _isLoadingSeries;
+  String? get seriesError => _seriesError;
+
+  // Getters yang sudah ada
   List<SermonModel> get sermons => _sermons;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -29,28 +45,47 @@ class SermonViewModel extends ChangeNotifier {
   bool get isLoadingDetail => _isLoadingDetail;
   String? get detailError => _detailError;
 
-  // Load sermons list
-  Future<void> loadSermons() async {
+  // Load sermon series
+  Future<void> loadSermonSeries() async {
+    if (_isLoadingSeries) return;
+
+    try {
+      _isLoadingSeries = true;
+      _seriesError = null;
+      notifyListeners();
+
+      _sermonSeries = await _sermonService.getActiveSermonSeries();
+
+      _isLoadingSeries = false;
+      notifyListeners();
+    } catch (e) {
+      _seriesError = e.toString();
+      _isLoadingSeries = false;
+      notifyListeners();
+    }
+  }
+
+  // Set series tanpa load sermons
+  void setSelectedSeries(SermonSeries series) {
+    _selectedSeries = series;
+    notifyListeners();
+  }
+
+  // Load khotbah berdasarkan series
+  Future<void> loadSermonsBySeries(String seriesId) async {
+    if (_isLoading) return;
+
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
-      _sermonService.getLatestSermons().listen(
-        (sermons) {
-          _sermons = sermons;
-          if (_sortBy == 'terlama') {
-            _sermons = _sermons.reversed.toList();
-          }
-          _isLoading = false;
-          notifyListeners();
-        },
-        onError: (error) {
-          _error = error.toString();
-          _isLoading = false;
-          notifyListeners();
-        },
-      );
+      final sermons = await _sermonService.getSermonsBySeriesId(seriesId);
+      _sermons = sermons;
+      _applySorting();
+
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
@@ -58,18 +93,20 @@ class SermonViewModel extends ChangeNotifier {
     }
   }
 
-  // Set sort order
+  void _applySorting() {
+    if (_sortBy == 'terlama') {
+      _sermons.sort((a, b) => a.date.compareTo(b.date));
+    } else {
+      _sermons.sort((a, b) => b.date.compareTo(a.date));
+    }
+  }
+
   void setSortBy(String value) {
     _sortBy = value;
-    if (value == 'terlama') {
-      _sermons = _sermons.reversed.toList();
-    } else {
-      _sermons = _sermons.reversed.toList();
-    }
+    _applySorting();
     notifyListeners();
   }
 
-  // Load sermon detail
   Future<void> loadSermonDetail(String sermonId) async {
     if (_isLoadingDetail) return;
 
@@ -78,9 +115,12 @@ class SermonViewModel extends ChangeNotifier {
       _detailError = null;
       notifyListeners();
 
-      _selectedSermon = await _sermonService.getSermonById(sermonId);
+      final result = await _sermonService.getSermonWithSeries(sermonId);
+      _selectedSermon = result['sermon'] as SermonModel;
+      _selectedSeries = result['series'] as SermonSeries?;
+
       if (_selectedSermon != null) {
-        _loadRelatedSermons(sermonId);
+        await _loadRelatedSermons(sermonId, _selectedSermon!.seriesId);
       }
 
       _isLoadingDetail = false;
@@ -92,20 +132,23 @@ class SermonViewModel extends ChangeNotifier {
     }
   }
 
-  // Load related sermons
-  void _loadRelatedSermons(String currentSermonId) {
-    _sermonService.getRelatedSermons(currentSermonId).listen(
-      (sermons) {
-        _relatedSermons = sermons;
-        notifyListeners();
-      },
-      onError: (error) {
-        print('Error loading related sermons: $error');
-      },
-    );
+  Future<void> _loadRelatedSermons(
+      String currentSermonId, String seriesId) async {
+    try {
+      final sermons = await _sermonService.getRelatedSermons(
+        seriesId: seriesId,
+        currentSermonId: currentSermonId,
+        limit: 3,
+      );
+      _relatedSermons = sermons;
+      notifyListeners();
+    } catch (error) {
+      print('Error loading related sermons: $error');
+      _relatedSermons = [];
+      notifyListeners();
+    }
   }
 
-  // Clear selected sermon when leaving detail screen
   void clearSelectedSermon() {
     _selectedSermon = null;
     _relatedSermons = [];
@@ -114,26 +157,23 @@ class SermonViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Method untuk refresh data
-  Future<void> refreshSermons() async {
-    _error = null;
-    await loadSermons();
+  void clearSelectedSeries() {
+    _selectedSeries = null;
+    _sermons = [];
+    clearSelectedSermon();
+    notifyListeners();
   }
 
-  // Debug methods
-  void debugPrintSermons() {
-    print('Total sermons: ${_sermons.length}');
-    for (var sermon in _sermons) {
-      print('Sermon: ${sermon.title} - ${sermon.date}');
-    }
+  void clearAll() {
+    _sermonSeries = [];
+    _seriesError = null;
+    _isLoadingSeries = false;
+    clearSelectedSeries();
   }
 
-  void debugPrintSelectedSermon() {
-    if (_selectedSermon != null) {
-      print('Selected Sermon: ${_selectedSermon!.title}');
-      print('Date: ${_selectedSermon!.formattedDate}');
-    } else {
-      print('No sermon selected');
-    }
+  // Refresh semua data
+  Future<void> refresh() async {
+    clearAll();
+    await loadSermonSeries();
   }
 }

@@ -25,6 +25,18 @@ class FirestoreService {
     }
   }
 
+  Future<void> updateUserFCMToken(String userId, String token) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'fcmToken': token,
+        'lastTokenUpdate': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error updating FCM token: $e');
+      throw Exception('Failed to update FCM token: $e');
+    }
+  }
+
   // Get user data
   Future<UserModel?> getUserData(String userId) async {
     try {

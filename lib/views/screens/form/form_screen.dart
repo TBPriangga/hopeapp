@@ -48,12 +48,6 @@ class _FormScreenState extends State<FormScreen> {
         'route': AppRoutes.offeringInfo,
       },
       {
-        'icon': Icons.play_circle,
-        'label': 'MULTIMEDIA',
-        'description': 'Pelayanan Media',
-        'route': AppRoutes.youtube,
-      },
-      {
         'icon': Icons.favorite_border,
         'label': 'PRANIKAH',
         'description': 'Pemberkatan Nikah',
@@ -68,7 +62,7 @@ class _FormScreenState extends State<FormScreen> {
       {
         'icon': Icons.water,
         'label': 'KRISTEN BARU',
-        'description': 'Pendaftaran Baptis',
+        'description': 'Pendaftaran Keanggotaan/Baptisan',
         'route': AppRoutes.baptismRegistration,
       },
     ];

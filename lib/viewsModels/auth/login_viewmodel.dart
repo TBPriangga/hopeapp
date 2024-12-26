@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../core/services/auth/auth_service.dart';
 import '../../core/services/firestore_service.dart';
 import '../../models/user_model.dart';
@@ -7,6 +8,7 @@ import '../../models/user_model.dart';
 class LoginViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -50,6 +52,12 @@ class LoginViewModel extends ChangeNotifier {
         throw Exception('Invalid user role');
       }
 
+      // Update FCM Token
+      await _updateFCMToken(userCredential.user!.uid);
+
+      // Subscribe to topics
+      await _subscribeToTopics();
+
       // Set current user
       _currentUser = userData;
 
@@ -81,7 +89,13 @@ class LoginViewModel extends ChangeNotifier {
       final user = userCredential.user!;
       final bool isNewUser = await _authService.isNewUser(user.uid);
 
+      // Update FCM Token
+      await _updateFCMToken(user.uid);
+
       if (isNewUser) {
+        // Subscribe to topics for new user
+        await _subscribeToTopics();
+
         return {
           'success': true,
           'isNewUser': true,
@@ -90,7 +104,7 @@ class LoginViewModel extends ChangeNotifier {
             'email': user.email,
             'name': user.displayName,
             'photoUrl': user.photoURL,
-            'role': 'user', // Set default role
+            'role': 'user',
           }
         };
       } else {
@@ -99,10 +113,12 @@ class LoginViewModel extends ChangeNotifier {
           throw Exception('User data not found');
         }
 
-        // Validasi role untuk existing user
         if (userData.role != 'user') {
           throw Exception('Invalid user role');
         }
+
+        // Subscribe to topics for existing user
+        await _subscribeToTopics();
 
         _currentUser = userData;
 
@@ -113,6 +129,54 @@ class LoginViewModel extends ChangeNotifier {
       return {'success': false, 'error': _errorMessage};
     } finally {
       _setLoading(false);
+    }
+  }
+
+  Future<void> _updateFCMToken(String userId) async {
+    try {
+      // Request permission for notifications
+      NotificationSettings settings =
+          await _firebaseMessaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        // Get the token
+        String? token = await _firebaseMessaging.getToken();
+
+        if (token != null) {
+          // Save the token to Firestore menggunakan method yang ada
+          await _firestoreService.saveUserData(
+            UserModel(
+              id: userId,
+              email: _currentUser?.email ?? '',
+              name: _currentUser?.name ?? '',
+              fcmToken: token, // Tambahkan field ini di UserModel
+              role: _currentUser?.role ?? 'user',
+              updatedAt: DateTime.now(),
+            ),
+          );
+
+          print('FCM Token updated for user: $userId');
+        }
+      }
+    } catch (e) {
+      print('Error updating FCM token: $e');
+    }
+  }
+
+  Future<void> _subscribeToTopics() async {
+    try {
+      // Subscribe to general topics
+      await _firebaseMessaging.subscribeToTopic('announcements');
+      await _firebaseMessaging.subscribeToTopic('events');
+      await _firebaseMessaging.subscribeToTopic('general');
+
+      print('Subscribed to general topics');
+    } catch (e) {
+      print('Error subscribing to topics: $e');
     }
   }
 

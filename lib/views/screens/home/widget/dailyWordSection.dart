@@ -16,7 +16,7 @@ class _DailyWordSectionState extends State<DailyWordSection> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DailyWordViewModel>().loadDailyWord();
+      context.read<DailyWordViewModel>().loadDailyWord(context);
     });
   }
 
@@ -68,7 +68,7 @@ class _DailyWordSectionState extends State<DailyWordSection> {
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: () => viewModel.loadDailyWord(),
+                    onPressed: () => viewModel.loadDailyWord(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF132054),
                       foregroundColor: Colors.white,

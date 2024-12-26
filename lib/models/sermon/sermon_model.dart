@@ -4,9 +4,10 @@ import 'package:intl/intl.dart';
 class SermonModel {
   final String id;
   final String title;
+  final String seriesId;
   final DateTime date;
   final String imageUrl;
-  final String imageDetailUrl;
+  final String youtubeUrl;
   final String preacher;
   final String description;
   final bool isActive;
@@ -17,9 +18,10 @@ class SermonModel {
   SermonModel({
     required this.id,
     required this.title,
+    required this.seriesId,
     required this.date,
     required this.imageUrl,
-    required this.imageDetailUrl,
+    required this.youtubeUrl,
     required this.preacher,
     required this.description,
     this.isActive = true,
@@ -51,13 +53,29 @@ class SermonModel {
     }
   }
 
+  // Getter untuk mengecek apakah memiliki video YouTube
+  bool get hasVideo => youtubeUrl.isNotEmpty;
+
+  // Getter untuk mendapatkan YouTube video ID
+  String? get youtubeVideoId {
+    if (!hasVideo) return null;
+
+    // Handle format URL YouTube yang berbeda
+    RegExp regExp = RegExp(
+        r'^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/');
+    Match? match = regExp.firstMatch(youtubeUrl);
+
+    return match?.group(7);
+  }
+
   factory SermonModel.fromMap(String id, Map<String, dynamic> map) {
     return SermonModel(
       id: id,
       title: map['title'] ?? '',
+      seriesId: map['seriesId'] ?? '',
       date: (map['date'] as Timestamp).toDate(),
       imageUrl: map['imageUrl'] ?? '',
-      imageDetailUrl: map['imageDetailUrl'] ?? '',
+      youtubeUrl: map['youtubeUrl'] ?? '',
       preacher: map['preacher'] ?? '',
       description: map['description'] ?? '',
       isActive: map['isActive'] ?? true,
@@ -75,9 +93,10 @@ class SermonModel {
   Map<String, dynamic> toMap() {
     return {
       'title': title,
+      'seriesId': seriesId,
       'date': date,
       'imageUrl': imageUrl,
-      'imageDetailUrl': imageDetailUrl,
+      'youtubeUrl': youtubeUrl,
       'preacher': preacher,
       'description': description,
       'isActive': isActive,

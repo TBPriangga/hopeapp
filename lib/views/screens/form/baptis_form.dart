@@ -25,7 +25,7 @@ class BaptismRegistrationScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Baptis',
+          'Keanggotaan/Baptisan',
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -62,7 +62,7 @@ class BaptismRegistrationScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'Pendaftaran Baptis',
+                    'Keanggotaan/Baptisan',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -116,17 +116,6 @@ class BaptismRegistrationScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
-
-                  // Requirements Section
-                  Text(
-                    'Persyaratan Baptis',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-                  ),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -142,27 +131,23 @@ class BaptismRegistrationScreen extends StatelessWidget {
                       ],
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildRequirementItem(
-                          icon: Icons.check_circle_outline,
-                          text: 'Minimal berusia 13 tahun',
+                        Text(
+                          "Gereja Baptis Indonesia Pengharapan Surabaya memegang teguh kebenaran tentang adanya gereja lokal dan doktrin keimaman orang percaya. Atas dasar itulah, kami menilai pentingnya status keanggotaan seseorang di dalam gereja lokal. Oleh sebab itu, kami rindu melayani Anda : ",
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.6,
+                            color: Colors.grey[800],
+                          ),
                         ),
+
                         const SizedBox(height: 12),
-                        _buildRequirementItem(
-                          icon: Icons.check_circle_outline,
-                          text: 'Telah mengikuti kelas pembaptisan',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildRequirementItem(
-                          icon: Icons.check_circle_outline,
-                          text:
-                              'Sudah menerima Yesus sebagai Tuhan dan Juruselamat',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildRequirementItem(
-                          icon: Icons.check_circle_outline,
-                          text: 'Membawa fotokopi KTP/Kartu Pelajar',
-                        ),
+                        // Points
+                        _buildDescriptionPoint(
+                            'Yang berasal dari gereja lain dan rindu menggabungkan diri ke GBI Pengharapan Surabaya'),
+                        _buildDescriptionPoint(
+                            'Yang belum dibaptiskan dan rindu untuk dibaptiskan di GBI Pengharapan Surabaya'),
                       ],
                     ),
                   ),
@@ -189,7 +174,7 @@ class BaptismRegistrationScreen extends StatelessWidget {
                           Icon(Icons.app_registration),
                           SizedBox(width: 8),
                           Text(
-                            'Daftar Baptis',
+                            'Daftar',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -219,7 +204,7 @@ class BaptismRegistrationScreen extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Setelah mendaftar, tim kami akan menghubungi Anda untuk informasi lebih lanjut mengenai jadwal kelas baptis.',
+                            'Anda dapat mengubungi Panitia Keanggotaan (Bu Lita - +62 813-3905-1349)',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 13,
@@ -238,28 +223,36 @@ class BaptismRegistrationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRequirementItem({
-    required IconData icon,
-    required String text,
-  }) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          color: const Color(0xFF132054),
-          size: 20,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.4,
+  Widget _buildDescriptionPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Container(
+              width: 4,
+              height: 4,
+              decoration: const BoxDecoration(
+                color: Color(0xFF132054),
+                shape: BoxShape.circle,
+              ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.6,
+                color: Colors.grey[800],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

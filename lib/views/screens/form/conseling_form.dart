@@ -147,17 +147,17 @@ class CounselingScreen extends StatelessWidget {
                       children: [
                         _buildScheduleItem(
                           day: 'Selasa',
-                          time: '10:00 - 14:00 WIB',
-                        ),
-                        const Divider(height: 24),
-                        _buildScheduleItem(
-                          day: 'Kamis',
-                          time: '13:00 - 17:00 WIB',
+                          time: '18:00 WIB',
                         ),
                         const Divider(height: 24),
                         _buildScheduleItem(
                           day: 'Sabtu',
-                          time: '10:00 - 15:00 WIB',
+                          time: '16:00 WIB',
+                        ),
+                        const Divider(height: 24),
+                        _buildScheduleItem(
+                          day: 'Sesuai Perjanjian',
+                          time: '',
                         ),
                       ],
                     ),
@@ -183,7 +183,6 @@ class CounselingScreen extends StatelessWidget {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.chat_bubble),
                           SizedBox(width: 8),
                           Text(
                             'Hubungi Pendeta',

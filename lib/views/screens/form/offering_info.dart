@@ -5,8 +5,73 @@ import '../../../app/routes/app_routes.dart';
 class OfferingInfoScreen extends StatelessWidget {
   const OfferingInfoScreen({super.key});
 
-  Future<void> _launchOfferingReport(BuildContext context) async {
-    Navigator.pushNamed(context, AppRoutes.offeringReport);
+  void _showQRDialog(
+    BuildContext context, {
+    required String title,
+    required String qrAsset,
+    required String description,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color(0xFF132054),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  Image.asset(
+                    qrAsset,
+                    height: 200,
+                    width: 200,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    description,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -31,133 +96,179 @@ class OfferingInfoScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // QRIS Section
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // QRIS Options
+              const Text(
+                'Pembayaran QRIS',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
                 children: [
-                  Text(
-                    'Pembayaran Digital',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Container(
-                      width: 280,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade200,
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/images/qris.png',
-                            height: 200,
-                            fit: BoxFit.contain,
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'QRIS GBI Pengharapan',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                  Expanded(
+                    child: _buildQRButton(
+                      context,
+                      title: 'Persembahan',
+                      icon: Icons.volunteer_activism,
+                      onTap: () => _showQRDialog(
+                        context,
+                        title: 'Persembahan',
+                        qrAsset: 'assets/images/qr_persembahan.png',
+                        description:
+                            'Scan QR code ini untuk memberikan persembahan umum',
                       ),
                     ),
                   ),
-
-                  // Bank Transfer Section
-                  const SizedBox(height: 32),
-                  Text(
-                    'Transfer Bank',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildBankAccount(
-                    bankName: 'BCA',
-                    accountNumber: '1234567890',
-                    accountName: 'GBI Pengharapan',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildBankAccount(
-                    bankName: 'Mandiri',
-                    accountNumber: '0987654321',
-                    accountName: 'GBI Pengharapan',
-                  ),
-
-                  // Offering Report Button
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _launchOfferingReport(context),
-                      icon: const Icon(Icons.description),
-                      label: const Text('Lihat Laporan Persembahan'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF132054),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildQRButton(
+                      context,
+                      title: 'Perpuluhan',
+                      icon: Icons.account_balance_wallet,
+                      onTap: () => _showQRDialog(
+                        context,
+                        title: 'Perpuluhan',
+                        qrAsset: 'assets/images/qr_perpuluhan.png',
+                        description:
+                            'Scan QR code ini untuk memberikan perpuluhan',
                       ),
                     ),
                   ),
-
-                  // Note
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: Colors.blue[700],
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Laporan persembahan diupdate setiap hari Senin',
-                            style: TextStyle(
-                              color: Colors.blue[700],
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildQRButton(
+                      context,
+                      title: 'Pembangunan',
+                      icon: Icons.church,
+                      onTap: () => _showQRDialog(
+                        context,
+                        title: 'Pembangunan',
+                        qrAsset: 'assets/images/qr_pembangunan.png',
+                        description: 'Scan QR code ini untuk dana pembangunan',
+                      ),
                     ),
                   ),
                 ],
               ),
+
+              const SizedBox(height: 32),
+
+              // Bank Transfer Section
+              const Text(
+                'Transfer Bank',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildBankAccount(
+                bankName: 'BCA',
+                accountNumber: '1234567890',
+                accountName: 'GBI Pengharapan',
+              ),
+              const SizedBox(height: 12),
+              _buildBankAccount(
+                bankName: 'Mandiri',
+                accountNumber: '0987654321',
+                accountName: 'GBI Pengharapan',
+              ),
+
+              // Report Button
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () =>
+                      Navigator.pushNamed(context, AppRoutes.offeringReport),
+                  icon: const Icon(Icons.description),
+                  label: const Text('Lihat Laporan Persembahan'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF132054),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+
+              // Note
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue[700]),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Laporan persembahan diupdate setiap hari Senin',
+                        style: TextStyle(
+                          color: Colors.blue[700],
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQRButton(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: const Color(0xFF132054),
+              size: 32,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

@@ -9,9 +9,12 @@ class UserModel {
   final DateTime? birthDate;
   final String? phoneNumber;
   final String? photoUrl;
+  final String? fcmToken;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final String role;
+  final int? birthMonth; // 1-12
+  final int? birthDay; // 1-31
 
   UserModel({
     required this.id,
@@ -21,31 +24,37 @@ class UserModel {
     this.birthDate,
     this.phoneNumber,
     this.photoUrl,
+    this.fcmToken,
     this.createdAt,
     this.updatedAt,
     this.role = 'user',
+    this.birthMonth,
+    this.birthDay,
   });
 
-  // Konversi dari Firestore
   factory UserModel.fromMap(String id, Map<String, dynamic> map) {
+    final birthDate =
+        map['birthDate'] != null && map['birthDate'].toString().isNotEmpty
+            ? DateFormat('dd/MM/yyyy').parse(map['birthDate'])
+            : null;
+
     return UserModel(
       id: id,
       email: map['email'] ?? '',
       name: map['name'] ?? '',
       address: map['address'],
-      birthDate:
-          map['birthDate'] != null && map['birthDate'].toString().isNotEmpty
-              ? DateFormat('dd/MM/yyyy').parse(map['birthDate'])
-              : null,
+      birthDate: birthDate,
       phoneNumber: map['phoneNumber'],
       photoUrl: map['photoUrl'],
+      fcmToken: map['fcmToken'],
       createdAt: map['createdAt']?.toDate(),
       updatedAt: map['updatedAt']?.toDate(),
       role: map['role'] ?? 'user',
+      birthMonth: birthDate?.month,
+      birthDay: birthDate?.day,
     );
   }
 
-  // Konversi ke Map untuk Firestore
   Map<String, dynamic> toMap() {
     return {
       'email': email,
@@ -56,9 +65,12 @@ class UserModel {
           : null,
       'phoneNumber': phoneNumber,
       'photoUrl': photoUrl,
+      'fcmToken': fcmToken,
       'role': role,
       'createdAt': createdAt ?? FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
+      'birthMonth': birthDate?.month,
+      'birthDay': birthDate?.day,
     };
   }
 
@@ -84,6 +96,8 @@ class UserModel {
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       role: role ?? this.role,
+      birthMonth: birthDate?.month ?? this.birthMonth,
+      birthDay: birthDate?.day ?? this.birthDay,
     );
   }
 

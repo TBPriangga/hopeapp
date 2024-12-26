@@ -116,17 +116,8 @@ class WeddingRegistrationScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  // Description Section
 
-                  // Requirements Section
-                  Text(
-                    'Persyaratan Pernikahan',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-                  ),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -141,34 +132,13 @@ class WeddingRegistrationScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Column(
-                      children: [
-                        _buildRequirementItem(
-                          icon: Icons.check_circle_outline,
-                          text:
-                              'Minimal usia 21 tahun atau sudah mendapat izin orang tua',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildRequirementItem(
-                          icon: Icons.check_circle_outline,
-                          text: 'Fotokopi KTP kedua calon mempelai',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildRequirementItem(
-                          icon: Icons.check_circle_outline,
-                          text: 'Fotokopi Kartu Keluarga kedua calon mempelai',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildRequirementItem(
-                          icon: Icons.check_circle_outline,
-                          text: 'Surat Baptis/Surat Keterangan Jemaat',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildRequirementItem(
-                          icon: Icons.check_circle_outline,
-                          text: 'Mengikuti Konseling Pranikah',
-                        ),
-                      ],
+                    child: Text(
+                      'Pernikahan adalah sebuah Lembaga pertama yang didirikan oleh Allah sendiri sejak pada mulanya. Pernikahan membawa manusia dapat semakin melayani dan memuliakan Allah melalui relasi penuh kasih, penuh hormat, serta penuh keintiman seksual di antara laki-laki dan Perempuan. Itu sebanya, bagi Anda yang rindu untuk menikah, maka Anda dapat menghubungi Panitia Keanggotaan (Bu Lita - +62 813-3905-1349)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.6,
+                        color: Colors.grey[800],
+                      ),
                     ),
                   ),
 
@@ -240,56 +210,6 @@ class WeddingRegistrationScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildRequirementItem({
-    required IconData icon,
-    required String text,
-  }) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          color: const Color(0xFF132054),
-          size: 20,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.4,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildScheduleItem({
-    required String day,
-    required String time,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          day,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Text(
-          time,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
     );
   }
 }

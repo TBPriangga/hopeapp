@@ -7,7 +7,7 @@ class DiscipleshipClassModel {
   final String description;
   final String schedule;
   final String mentor;
-  final String mentorPhoto;
+  final String classPhotoUrl;
   final String location;
   final bool isActive;
 
@@ -18,7 +18,7 @@ class DiscipleshipClassModel {
     required this.description,
     required this.schedule,
     required this.mentor,
-    required this.mentorPhoto,
+    required this.classPhotoUrl,
     required this.location,
     this.isActive = true,
   });
@@ -26,18 +26,14 @@ class DiscipleshipClassModel {
   // Helper untuk mendapatkan icon berdasarkan kategori
   IconData get categoryIcon {
     switch (category.toLowerCase()) {
-      case 'anak-anak':
+      case 'anak':
         return Icons.child_care;
-      case 'remaja':
-        return Icons.face;
-      case 'pemuda':
-        return Icons.group;
-      case 'pemudi':
-        return Icons.group;
-      case 'dewasa pria':
-        return Icons.man;
-      case 'dewasa wanita':
-        return Icons.woman;
+      case 'remaja-pemuda':
+        return Icons.groups;
+      case 'dewasa muda':
+        return Icons.person;
+      case 'dewasa senior':
+        return Icons.people_outline;
       default:
         return Icons.group;
     }
@@ -46,17 +42,13 @@ class DiscipleshipClassModel {
   // Helper untuk mendapatkan warna berdasarkan kategori
   Color get categoryColor {
     switch (category.toLowerCase()) {
-      case 'anak-anak':
+      case 'anak':
         return Colors.blue;
-      case 'remaja':
-        return Colors.green;
-      case 'pemuda':
+      case 'remaja-pemuda':
         return Colors.orange;
-      case 'pemudi':
-        return Colors.pink;
-      case 'dewasa pria':
-        return Colors.indigo;
-      case 'dewasa wanita':
+      case 'dewasa muda':
+        return Colors.green;
+      case 'dewasa senior':
         return Colors.purple;
       default:
         return Colors.grey;

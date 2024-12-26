@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/birthday_verse.dart';
 import '../../../../models/home/birthday_model.dart';
 
 class BirthdayPopup extends StatelessWidget {
   final BirthdayModel birthday;
+  final BirthdayVerse verse;
 
-  const BirthdayPopup({
+  BirthdayPopup({
     super.key,
     required this.birthday,
-  });
+  }) : verse = BirthdayVerseHelper.getRandomVerse();
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +22,7 @@ class BirthdayPopup extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header dengan foto
+          // Header with photo
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: Stack(
@@ -102,10 +104,16 @@ class BirthdayPopup extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                const Text(
-                  '"Sebab Engkaulah yang membentuk buah pinggangku, menenun aku dalam kandungan ibuku.\nAku bersyukur kepada-Mu oleh karena kejadianku dahsyat dan ajaib."',
+                const Icon(
+                  Icons.format_quote,
+                  color: Color(0xFF132054),
+                  size: 32,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '"${verse.content}"',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     height: 1.5,
                     fontStyle: FontStyle.italic,
@@ -113,7 +121,7 @@ class BirthdayPopup extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Mazmur 139:13-14',
+                  verse.reference,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
@@ -129,10 +137,10 @@ class BirthdayPopup extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'Tuhan memberkati di tahun yang baru ini',
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: Colors.grey,
                     fontSize: 16,
                   ),
                 ),

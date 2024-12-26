@@ -23,25 +23,64 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
   final List<DiscipleshipClassModel> _classes = [
     DiscipleshipClassModel(
       id: '1',
-      name: 'Kelas Alkitab Anak',
+      name: 'Batita',
       category: 'Anak',
-      description: 'Pembelajaran Alkitab untuk anak usia 7-12 tahun',
+      description: 'Kelas ini beranggotakan anak berusia di bawah 3 tahun',
       schedule: 'Minggu, 09:00 WIB',
-      mentor: 'Ibu Sarah',
-      mentorPhoto: 'https://example.com/photos/mentor1.jpg',
+      mentor: 'Bu Vero dan Bu Lia',
+      classPhotoUrl: 'https://example.com/photos/mentor1.jpg',
       location: 'Ruang Kelas 1',
     ),
     DiscipleshipClassModel(
       id: '2',
-      name: 'Youth Bible Study',
+      name: 'Indria',
+      category: 'Anak',
+      description: 'Kelas ini beranggotakan anak berusia 3-5 tahun',
+      schedule: 'Minggu, 09:00 WIB',
+      mentor: 'Bu Puji, Bu Yani, Bu Erna',
+      classPhotoUrl: 'https://example.com/photos/mentor1.jpg',
+      location: 'Ruang Kelas 1',
+    ),
+    DiscipleshipClassModel(
+      id: '3',
+      name: 'Pratama A',
+      category: 'Anak',
+      description: 'Kelas ini beranggotakan anak berusia 6-7 tahun',
+      schedule: 'Minggu, 09:00 WIB',
+      mentor: 'Sdri. Ebi dan Bu Vitri',
+      classPhotoUrl: 'https://example.com/photos/mentor1.jpg',
+      location: 'Ruang Kelas 1',
+    ),
+    DiscipleshipClassModel(
+      id: '4',
+      name: 'Pratama B',
+      category: 'Anak',
+      description: 'Kelas ini beranggotakan anak berusia 8-9 tahun',
+      schedule: 'Minggu, 09:00 WIB',
+      mentor: 'Bu Ari dan Bu Arwhien',
+      classPhotoUrl: 'https://example.com/photos/mentor1.jpg',
+      location: 'Ruang Kelas 1',
+    ),
+    DiscipleshipClassModel(
+      id: '5',
+      name: 'Madya',
+      category: 'Anak',
+      description: 'Kelas ini beranggotakan anak berusia 10-11 tahun',
+      schedule: 'Minggu, 09:00 WIB',
+      mentor: 'Bu Ira dan Bu Dini',
+      classPhotoUrl: 'https://example.com/photos/mentor1.jpg',
+      location: 'Ruang Kelas 1',
+    ),
+    DiscipleshipClassModel(
+      id: '6',
+      name: 'Golgota',
       category: 'Remaja-Pemuda',
-      description: 'Pembelajaran Alkitab untuk remaja usia 13-16 tahun',
+      description: 'Kelas ini beranggotakan remaja putra dan putri usia SMP',
       schedule: 'Sabtu, 16:00 WIB',
-      mentor: 'Kak David',
-      mentorPhoto: 'https://example.com/photos/mentor2.jpg',
+      mentor: 'Bu Amel',
+      classPhotoUrl: 'https://example.com/photos/mentor2.jpg',
       location: 'Ruang Remaja',
     ),
-    // ... more classes
   ];
 
   List<DiscipleshipClassModel> get filteredClasses {
@@ -108,7 +147,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
                           style: TextStyle(
                             color: isSelected
                                 ? const Color(0xFF132054)
-                                : Colors.black,
+                                : Colors.white,
                           ),
                         ),
                         onSelected: (selected) {
@@ -147,39 +186,68 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       ),
       child: Column(
         children: [
-          // Header with Category
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: classData.categoryColor.withOpacity(0.1),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
+          // Class Photo Section
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.network(
+                classData.classPhotoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: const Icon(
+                      Icons.group_outlined,
+                      size: 50,
+                      color: Colors.white,
+                    ),
+                  );
+                },
               ),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  classData.categoryIcon,
-                  color: classData.categoryColor,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  classData.category,
-                  style: TextStyle(
-                    color: classData.categoryColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
           ),
-          // Content
-          Padding(
+          // Content Section
+          Container(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Category & Title
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: classData.categoryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            classData.categoryIcon,
+                            size: 16,
+                            color: classData.categoryColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            classData.category,
+                            style: TextStyle(
+                              color: classData.categoryColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
                 Text(
                   classData.name,
                   style: const TextStyle(
@@ -197,66 +265,35 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Mentor Section with Photo
+                // Info Section
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
+                  child: Column(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          classData.mentorPhoto,
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: 60,
-                              height: 60,
-                              color: Colors.grey[300],
-                              child: const Icon(
-                                Icons.person,
-                                color: Colors.white,
-                              ),
-                            );
-                          },
-                        ),
+                      _buildInfoRow(
+                        Icons.person,
+                        'Pembimbing',
+                        classData.mentor,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Pembimbing',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              classData.mentor,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF132054),
-                              ),
-                            ),
-                          ],
-                        ),
+                      const Divider(height: 16),
+                      _buildInfoRow(
+                        Icons.schedule,
+                        'Jadwal',
+                        classData.schedule,
+                      ),
+                      const Divider(height: 16),
+                      _buildInfoRow(
+                        Icons.location_on,
+                        'Lokasi',
+                        classData.location,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                // Schedule and Location
-                _buildInfoRow(Icons.schedule, 'Jadwal', classData.schedule),
-                const SizedBox(height: 8),
-                _buildInfoRow(Icons.location_on, 'Lokasi', classData.location),
               ],
             ),
           ),
@@ -266,26 +303,29 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
-        const SizedBox(width: 8),
-        Text(
-          '$label: ',
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              color: Colors.grey[800],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[600]),
+          const SizedBox(width: 8),
+          Text(
+            '$label: ',
+            style: const TextStyle(
+              color: Color(0xFF132054),
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ),
-      ],
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Colors.grey[800],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
