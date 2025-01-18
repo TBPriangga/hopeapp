@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Basic Permissions -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -10,11 +11,21 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
+    <!-- Permissions untuk Image Cropper -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+
     <application
         android:label="hopeapp"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
+
+        <!-- App Check Configuration -->
+        <meta-data
+            android:name="firebase_app_check_debug_token"
+            android:value="42B859AD-FC00-4DE1-8D09-AFCC1751AD19"/>
 
         <!-- Firebase Notification Settings -->
         <meta-data
@@ -65,6 +76,23 @@
         <meta-data
             android:name="com.google.firebase.messaging.birthday_channel_importance"
             android:value="high" />
+
+        <!-- Activity untuk Image Cropper -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
+        <!-- Provider untuk Image Cropper -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths"/>
+        </provider>
 
         <!-- Main Activity -->
         <activity

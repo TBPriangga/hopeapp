@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../app/routes/app_routes.dart';
 import '../../../core/utils/dialog_helper.dart';
 import '../../../viewsModels/auth/login_viewmodel.dart';
-import '../../../app/routes/app_routes.dart';
 import '../../widgets/customTextField.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -10,6 +10,9 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final padding = MediaQuery.of(context).padding;
+
     return ChangeNotifierProvider(
       create: (_) => LoginViewModel(),
       child: Consumer<LoginViewModel>(
@@ -29,239 +32,259 @@ class LoginScreen extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      const Color(0xFF132054).withOpacity(0.8),
                       const Color(0xFF2B478A).withOpacity(0.8),
+                      const Color(0xFF132054).withOpacity(0.8),
                     ],
-                    stops: const [0.0, 1.0],
                   ),
                 ),
                 child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 48),
-                        Center(
-                          child: Image.asset(
-                            'assets/logo/hope_logo.png',
-                            height: 50,
-                          ),
-                        ),
-                        const SizedBox(height: 48),
-                        const Center(
-                          child: Text(
-                            'Masuk Akun',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        if (viewModel.errorMessage != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: Text(
-                              viewModel.errorMessage!,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 14,
+                  child: SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: size.height - padding.top - padding.bottom,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Logo Section
+                            SizedBox(height: size.height * 0.01),
+                            Center(
+                              child: Image.asset(
+                                'assets/logo/hope_logo3.png',
+                                height: size.height * 0.20,
                               ),
                             ),
-                          ),
-                        const SizedBox(height: 24),
-                        CustomTextField(
-                          label: 'E-mail',
-                          hintText: 'Cth : ayudimas@gmail.com',
-                          controller: viewModel.emailController,
-                        ),
-                        const SizedBox(height: 16),
-                        CustomTextField(
-                          label: 'Kata Sandi',
-                          hintText: '••••••••••',
-                          isPassword: true,
-                          controller: viewModel.passwordController,
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: viewModel.isLoading
-                                ? null
-                                : () async {
-                                    if (await viewModel.login()) {
-                                      if (context.mounted) {
-                                        DialogHelper.showSuccessDialog(
-                                          context: context,
-                                          title: 'Login Berhasil',
-                                          message:
-                                              'Selamat datang ${viewModel.currentUser?.name}',
-                                          buttonText: 'Lanjutkan',
-                                          onPressed: () {
-                                            Navigator.pop(
-                                                context); // Tutup dialog
-                                            // Navigate to home screen
-                                            Navigator.pushReplacementNamed(
-                                                context, AppRoutes.home);
-                                          },
-                                        );
-                                      }
-                                    } else if (viewModel.errorMessage != null) {
-                                      // Tampilkan error dialog jika ada error
-                                      if (context.mounted) {
-                                        DialogHelper.showErrorDialog(
-                                          context: context,
-                                          title: 'Login Gagal',
-                                          message: viewModel.errorMessage!,
-                                        );
-                                      }
-                                    }
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF132054),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+
+                            // Title Section
+                            const Center(
+                              child: Text(
+                                'Selamat Datang',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                            child: viewModel.isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
+                            const SizedBox(height: 8),
+                            Center(
+                              child: Text(
+                                'Masuk ke akun Anda',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: size.height * 0.04),
+
+                            // Error Message
+                            if (viewModel.errorMessage != null) ...[
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                      color: Colors.red.withOpacity(0.3)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.error_outline,
+                                        color: Colors.red[300], size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        viewModel.errorMessage!,
+                                        style: TextStyle(
+                                            color: Colors.red[300],
+                                            fontSize: 14),
+                                      ),
                                     ),
-                                  )
-                                : const Text(
-                                    'Masuk',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+
+                            // Login Form
+                            CustomTextField(
+                              label: 'Email',
+                              hintText: 'Cth : johndoe@gmail.com',
+                              controller: viewModel.emailController,
+                              prefixIcon: const Icon(Icons.email_outlined),
+                            ),
+                            const SizedBox(height: 16),
+                            CustomTextField(
+                              label: 'Kata Sandi',
+                              hintText: '••••••••••',
+                              isPassword: true,
+                              controller: viewModel.passwordController,
+                              prefixIcon: const Icon(Icons.lock_outlined),
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Forgot Password Link
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                      context, AppRoutes.forgotPassword);
+                                },
+                                child: const Text(
+                                  'Lupa kata sandi?',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
                                   ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: false,
-                              onChanged: (value) {},
-                              fillColor: WidgetStateProperty.all(Colors.white),
-                            ),
-                            const Text(
-                              'Lupa kata sandi ?',
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                            ),
-                            const Spacer(),
-                            TextButton(
-                              onPressed: () {},
-                              child: const Text(
-                                'Setel Ulang',
-                                style: TextStyle(
-                                  color: Colors.blue,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Belum memiliki akun? Silahkan',
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                    context, AppRoutes.register);
-                              },
-                              style: TextButton.styleFrom(
+                            const SizedBox(height: 24),
+
+                            // Login Button
+                            ElevatedButton(
+                              onPressed: viewModel.isLoading
+                                  ? null
+                                  : () async {
+                                      if (await viewModel.login()) {
+                                        if (context.mounted) {
+                                          DialogHelper.showSuccessDialog(
+                                            context: context,
+                                            title: 'Login Berhasil',
+                                            message:
+                                                'Selamat datang ${viewModel.currentUser?.name}',
+                                            buttonText: 'Lanjutkan',
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              Navigator.pushReplacementNamed(
+                                                  context, AppRoutes.home);
+                                            },
+                                          );
+                                        }
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFF132054),
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 4),
-                              ),
-                              child: const Text(
-                                'Daftar',
-                                style: TextStyle(
-                                  color: Colors.blue,
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
+                                elevation: 0,
                               ),
+                              child: viewModel.isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : const Text(
+                                      'Masuk',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                             ),
-                          ],
-                        ),
-                        // Perbarui bagian ini di LoginScreen
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'atau lanjutkan dengan',
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
+                            SizedBox(height: size.height * 0.03),
+
+                            // Divider
+                            Row(
+                              children: [
+                                Expanded(
+                                    child: Divider(
+                                        color: Colors.white.withOpacity(0.3))),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: Text(
+                                    'atau',
+                                    style: TextStyle(
+                                        color: Colors.white.withOpacity(0.8)),
+                                  ),
+                                ),
+                                Expanded(
+                                    child: Divider(
+                                        color: Colors.white.withOpacity(0.3))),
+                              ],
                             ),
-                            const SizedBox(width: 16),
-                            GestureDetector(
-                              onTap: () async {
-                                // Panggil Google Sign In
+                            const SizedBox(height: 24),
+
+                            // Google Sign In Button
+                            OutlinedButton.icon(
+                              onPressed: () async {
                                 final result =
                                     await viewModel.signInWithGoogle();
-
-                                if (result['success']) {
+                                if (result['success'] && context.mounted) {
                                   if (result['isNewUser']) {
-                                    // User baru perlu melengkapi profile
-                                    if (context.mounted) {
-                                      Navigator.pushNamed(
-                                        context,
-                                        AppRoutes.completeProfile,
-                                        arguments: result['userData'],
-                                      );
-                                    }
-                                  } else {
-                                    // User sudah ada, tampilkan success dialog
-                                    if (context.mounted) {
-                                      DialogHelper.showSuccessDialog(
-                                        context: context,
-                                        title: 'Login Berhasil',
-                                        message: 'Selamat datang!',
-                                        buttonText: 'Lanjutkan',
-                                        onPressed: () {
-                                          Navigator.pop(
-                                              context); // Tutup dialog
-                                          Navigator.pushReplacementNamed(
-                                            context,
-                                            AppRoutes.home,
-                                          );
-                                        },
-                                      );
-                                    }
-                                  }
-                                } else {
-                                  // Tampilkan error jika gagal
-                                  if (context.mounted) {
-                                    DialogHelper.showErrorDialog(
-                                      context: context,
-                                      title: 'Login Gagal',
-                                      message: result['error'],
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.completeProfile,
+                                      arguments: result['userData'],
                                     );
+                                  } else {
+                                    Navigator.pushReplacementNamed(
+                                        context, AppRoutes.home);
                                   }
                                 }
                               },
-                              child: Image.asset(
+                              icon: Image.asset(
                                 'assets/icons/google_icon.png',
                                 height: 24,
                               ),
+                              label: const Text(
+                                'Lanjutkan dengan Google',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                side: BorderSide(
+                                    color: Colors.white.withOpacity(0.5)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                             ),
+                            SizedBox(height: size.height * 0.04),
+
+                            // Register Link
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Belum memiliki akun? ',
+                                  style: TextStyle(
+                                      color: Colors.white.withOpacity(0.8)),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pushNamed(
+                                        context, AppRoutes.register);
+                                  },
+                                  child: const Text(
+                                    'Daftar Sekarang',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: size.height * 0.02),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),

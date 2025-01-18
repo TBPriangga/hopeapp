@@ -1,4 +1,8 @@
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 enum NotificationType { event, announcement, reminder, general }
 
@@ -70,5 +74,49 @@ class NotificationModel {
       isRead: isRead ?? this.isRead,
       additionalData: additionalData ?? this.additionalData,
     );
+  }
+
+  // Added helper methods
+  String get relativeTime {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+
+    if (difference.inDays > 7) {
+      return DateFormat('dd MMM yyyy', 'id_ID').format(createdAt);
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays} hari yang lalu';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} jam yang lalu';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} menit yang lalu';
+    } else {
+      return 'Baru saja';
+    }
+  }
+
+  IconData get icon {
+    switch (type) {
+      case NotificationType.event:
+        return Icons.event;
+      case NotificationType.announcement:
+        return Icons.campaign;
+      case NotificationType.reminder:
+        return Icons.alarm;
+      case NotificationType.general:
+        return Icons.notifications;
+    }
+  }
+
+  Color get color {
+    switch (type) {
+      case NotificationType.event:
+        return Colors.blue;
+      case NotificationType.announcement:
+        return Colors.orange;
+      case NotificationType.reminder:
+        return Colors.purple;
+      case NotificationType.general:
+        return Colors.grey;
+    }
   }
 }

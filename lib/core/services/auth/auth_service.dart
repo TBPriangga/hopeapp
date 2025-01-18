@@ -8,6 +8,57 @@ class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Reset password
+  Future<void> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } catch (e) {
+      throw Exception('Failed to send reset password email: $e');
+    }
+  }
+
+  // Verify password reset code
+  Future<bool> verifyPasswordResetCode(String code) async {
+    try {
+      await _auth.verifyPasswordResetCode(code);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Confirm password reset
+  Future<void> confirmPasswordReset(String code, String newPassword) async {
+    try {
+      await _auth.confirmPasswordReset(code: code, newPassword: newPassword);
+    } catch (e) {
+      throw Exception('Failed to reset password: $e');
+    }
+  }
+
+  // Change password
+  Future<void> changePassword(
+      String currentPassword, String newPassword) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('User not found');
+
+      // Get credentials for re-authentication
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      // Re-authenticate
+      await user.reauthenticateWithCredential(credential);
+
+      // Update password
+      await user.updatePassword(newPassword);
+    } catch (e) {
+      throw Exception('Failed to change password: $e');
+    }
+  }
+
   // Login dengan email dan password
   Future<UserCredential> login(String email, String password) async {
     try {

@@ -17,6 +17,11 @@ class _DetailSermonScreenState extends State<DetailSermonScreen> {
   YoutubePlayerController? _youtubeController;
   bool _isPlayerReady = false;
 
+  // Kontrol ukuran teks
+  double _textScaleFactor = 1.0;
+  static const double _minTextScale = 0.8;
+  static const double _maxTextScale = 2.0;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -43,7 +48,6 @@ class _DetailSermonScreenState extends State<DetailSermonScreen> {
 
   void _initializeYoutubePlayer(String url) {
     if (url.isEmpty) return;
-
     try {
       setState(() {
         _youtubeController = YouTubeHelper.initializeController(url);
@@ -73,20 +77,106 @@ class _DetailSermonScreenState extends State<DetailSermonScreen> {
         ),
       );
     } else {
-      return Image.network(
-        sermon.imageUrl,
-        width: double.infinity,
-        height: 200,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            height: 200,
-            color: Colors.grey[300],
-            child: const Icon(Icons.error),
-          );
-        },
+      return AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Image.network(
+          sermon.imageUrl,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.error),
+            );
+          },
+        ),
       );
     }
+  }
+
+  Widget _buildSummaryCard(SermonModel sermon) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Icon dan judul ringkasan
+              Row(
+                children: [
+                  const Icon(
+                    Icons.lightbulb_outline,
+                    color: Color(0xFF132054),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Ringkasan',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF132054),
+                    ),
+                  ),
+                ],
+              ),
+              // Kontrol ukuran teks
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove),
+                    onPressed: () {
+                      setState(() {
+                        _textScaleFactor = (_textScaleFactor - 0.1)
+                            .clamp(_minTextScale, _maxTextScale);
+                      });
+                    },
+                    iconSize: 20,
+                    color: Colors.grey[600],
+                    tooltip: 'Perkecil teks',
+                  ),
+                  Text(
+                    'Ukuran Teks',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () {
+                      setState(() {
+                        _textScaleFactor = (_textScaleFactor + 0.1)
+                            .clamp(_minTextScale, _maxTextScale);
+                      });
+                    },
+                    iconSize: 20,
+                    color: Colors.grey[600],
+                    tooltip: 'Perbesar teks',
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            sermon.description,
+            style: TextStyle(
+              fontSize: 15 * _textScaleFactor,
+              color: Colors.grey[800],
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -116,24 +206,21 @@ class _DetailSermonScreenState extends State<DetailSermonScreen> {
           child: Scaffold(
             body: CustomScrollView(
               slivers: [
-                // App Bar with back button
+                // App Bar
                 SliverAppBar(
                   floating: true,
                   backgroundColor: const Color(0xFF132054),
                   leading: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white,
-                    ),
+                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
                     onPressed: () {
                       viewModel.clearSelectedSermon();
                       Navigator.pop(context);
                     },
                   ),
                   centerTitle: true,
-                  title: Text(
-                    'Sermon',
-                    style: const TextStyle(
+                  title: const Text(
+                    'Khotbah',
+                    style: TextStyle(
                       fontSize: 18,
                       color: Colors.white,
                     ),
@@ -147,12 +234,8 @@ class _DetailSermonScreenState extends State<DetailSermonScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // YouTube Player or Thumbnail
                         _buildMediaContent(sermon),
-
                         const SizedBox(height: 16),
-
-                        // Series info if available
                         if (viewModel.selectedSeries != null)
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -163,135 +246,114 @@ class _DetailSermonScreenState extends State<DetailSermonScreen> {
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: Text(
-                              viewModel.selectedSeries!.title,
-                              style: TextStyle(
-                                color: Colors.blue[700],
-                                fontSize: 14,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    viewModel.selectedSeries!.title,
+                                    style: TextStyle(
+                                      color: Colors.blue[700],
+                                      fontSize: 12,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-
                         const SizedBox(height: 16),
-
-                        // Sermon title
                         Text(
                           sermon.title,
                           style: const TextStyle(
-                            fontSize: 24,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF132054),
                           ),
+                          softWrap: true,
                         ),
-
                         const SizedBox(height: 8),
-
-                        // Date and preacher
-                        Row(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.calendar_today,
-                                size: 16, color: Colors.grey[600]),
-                            const SizedBox(width: 4),
-                            Text(
-                              sermon.formattedDate,
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 14,
-                              ),
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today,
+                                    size: 14, color: Colors.grey[600]),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    sermon.formattedDate,
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 16),
-                            Icon(Icons.person_outline,
-                                size: 16, color: Colors.grey[600]),
-                            const SizedBox(width: 4),
-                            Text(
-                              sermon.preacher,
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 14,
-                              ),
+                            const SizedBox(height: 8),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Icons.person_outline,
+                                    size: 14, color: Colors.grey[600]),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    sermon.preacher,
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 24),
-
-                        // Description
-                        const Text(
-                          'Ringkasan',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF132054),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          sermon.description,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[800],
-                            height: 1.6,
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Materials if available
+                        _buildSummaryCard(sermon),
                         if (sermon.materials.isNotEmpty) ...[
+                          const SizedBox(height: 24),
                           const Text(
                             'Materi',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF132054),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          // Material cards
+                          const SizedBox(height: 8),
                           ...sermon.materials.map((material) => Card(
-                                margin: const EdgeInsets.only(bottom: 8),
+                                margin: const EdgeInsets.only(bottom: 6),
                                 child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
                                   leading: Icon(
                                     material.fileType?.toLowerCase() == 'pdf'
                                         ? Icons.picture_as_pdf
                                         : Icons.insert_drive_file,
                                     color: const Color(0xFF132054),
+                                    size: 20,
                                   ),
-                                  title: Text(material.title),
-                                  trailing: const Icon(Icons.download),
+                                  title: Text(
+                                    material.title,
+                                    style: const TextStyle(fontSize: 13),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  trailing:
+                                      const Icon(Icons.download, size: 20),
                                   onTap: () {
                                     // Handle material download
                                   },
                                 ),
                               )),
-                        ],
-
-                        const SizedBox(height: 24),
-
-                        // Related sermons section
-                        if (viewModel.relatedSermons.isNotEmpty) ...[
-                          const Text(
-                            'Khotbah Terkait',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF132054),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height: 200,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: viewModel.relatedSermons.length,
-                              itemBuilder: (context, index) {
-                                final relatedSermon =
-                                    viewModel.relatedSermons[index];
-                                return _buildRelatedSermonCard(
-                                    context, relatedSermon);
-                              },
-                            ),
-                          ),
                         ],
                       ],
                     ),
@@ -302,76 +364,6 @@ class _DetailSermonScreenState extends State<DetailSermonScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildRelatedSermonCard(BuildContext context, SermonModel sermon) {
-    return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 16),
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: InkWell(
-          onTap: () {
-            Navigator.pushReplacementNamed(
-              context,
-              '/detail-sermon',
-              arguments: sermon.id,
-            );
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: Image.network(
-                  sermon.imageUrl,
-                  height: 120,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 120,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.error),
-                    );
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      sermon.title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      sermon.formattedDate,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

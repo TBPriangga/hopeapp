@@ -57,6 +57,8 @@ dependencies:
   timezone: ^0.10.0
   app_settings: ^5.1.1
   permission_handler: ^11.3.1
+  image_cropper: ^8.1.0
+  firebase_app_check: ^0.3.1+7
 
 dev_dependencies:
   flutter_test:

@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -48,6 +49,9 @@ class RegisterViewModel extends ChangeNotifier {
         passwordController.text.trim(),
       );
 
+      // Get FCM Token
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+
       // Buat user model dengan role user
       final user = UserModel(
         id: userCredential.user!.uid,
@@ -57,7 +61,8 @@ class RegisterViewModel extends ChangeNotifier {
         birthDate: _selectedDate!,
         phoneNumber: phoneController.text.trim(),
         photoUrl: defaultAvatarUrl,
-        role: 'user', // Set role sebagai user
+        fcmToken: fcmToken, // Tambahkan FCM token
+        role: 'user',
         createdAt: DateTime.now(),
       );
 

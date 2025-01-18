@@ -3,7 +3,9 @@ import 'package:hopeapp/views/screens/sermons/detail_sermon_screen.dart';
 import 'package:hopeapp/views/screens/sermons/save_sermon_screen.dart';
 import 'package:hopeapp/views/screens/sermons/sermon_screen.dart';
 import '../../views/screens/about/about_screen.dart';
+import '../../views/screens/auth/change_password_screen.dart';
 import '../../views/screens/auth/complete_register_screen.dart';
+import '../../views/screens/auth/fotgot_password_screen.dart';
 import '../../views/screens/auth/login_screen.dart';
 import '../../views/screens/auth/register_screen.dart';
 import '../../views/screens/dailyword/dailyWord_listScreen.dart';
@@ -22,7 +24,6 @@ import '../../views/screens/form/wedding_form.dart';
 import '../../views/screens/notifications/notifications_screen.dart';
 import '../../views/screens/notifications/notifications_test_screen.dart';
 import '../../views/screens/offering/offering_report_screen.dart';
-import '../../views/screens/profile/screen/change_password.dart';
 import '../../views/screens/profile/screen/edit_profile_screen.dart';
 import '../../views/screens/profile/screen/profile_screen.dart';
 import '../../views/screens/sermons/series_list_screen.dart';
@@ -63,6 +64,7 @@ class AppRoutes {
   static const String sermonSeries = '/sermon-series';
   static const String sermonSeriesDetail = '/sermon-series-detail';
   static const String notificationTest = '/notification-test';
+  static const String forgotPassword = '/forgot-password';
 
   static Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
@@ -99,5 +101,6 @@ class AppRoutes {
     sermonSeries: (context) => const SermonSeriesScreen(),
     sermonSeriesDetail: (context) => const SermonSeriesDetailScreen(),
     notificationTest: (context) => const NotificationTestScreen(),
+    forgotPassword: (context) => const ForgotPasswordScreen(),
   };
 }

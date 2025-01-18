@@ -1,6 +1,7 @@
+// notifications_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../../../models/notifications/notifications_model.dart';
 import '../../../viewsModels/notifications/notifications_viewmodel.dart';
@@ -16,7 +17,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize notification service
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<NotificationViewModel>().initialize();
     });
@@ -52,12 +52,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 centerTitle: true,
                 actions: [
-                  // Mark all as read button
                   IconButton(
                     icon: const Icon(Icons.done_all, color: Colors.white),
                     onPressed: () {
@@ -71,6 +69,37 @@ class _NotificationScreenState extends State<NotificationScreen> {
               Expanded(
                 child: Consumer<NotificationViewModel>(
                   builder: (context, viewModel, child) {
+                    if (viewModel.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (viewModel.error != null) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline,
+                                size: 48, color: Colors.red[300]),
+                            const SizedBox(height: 16),
+                            Text(
+                              viewModel.error!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () => viewModel.clearError(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFF132054),
+                              ),
+                              child: const Text('Coba Lagi'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
                     return StreamBuilder<List<NotificationModel>>(
                       stream: viewModel.getNotifications(),
                       builder: (context, snapshot) {
@@ -90,21 +119,22 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         }
 
                         final notifications = snapshot.data!;
+
                         if (notifications.isEmpty) {
                           return Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.notifications_none,
+                                  Icons.notifications_off_outlined,
                                   size: 64,
                                   color: Colors.white.withOpacity(0.5),
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'Tidak ada notifikasi',
+                                  'Belum ada notifikasi',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.5),
+                                    color: Colors.white.withOpacity(0.7),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -119,10 +149,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           itemBuilder: (context, index) {
                             final notification = notifications[index];
                             return _buildNotificationCard(
-                              context,
-                              notification,
-                              viewModel,
-                            );
+                                context, notification);
                           },
                         );
                       },
@@ -138,94 +165,87 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Widget _buildNotificationCard(
-    BuildContext context,
-    NotificationModel notification,
-    NotificationViewModel viewModel,
-  ) {
+      BuildContext context, NotificationModel notification) {
     return Dismissible(
       key: Key(notification.id),
-      background: Container(
-        color: Colors.red,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
-        child: const Icon(
-          Icons.delete,
-          color: Colors.white,
-        ),
-      ),
       direction: DismissDirection.endToStart,
-      onDismissed: (direction) {
-        viewModel.deleteNotification(notification.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Notifikasi dihapus'),
-            action: SnackBarAction(
-              label: 'Undo',
-              onPressed: () {
-                // TODO: Implement undo functionality
-              },
-            ),
-          ),
-        );
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      onDismissed: (_) {
+        context
+            .read<NotificationViewModel>()
+            .deleteNotification(notification.id);
       },
       child: Card(
         margin: const EdgeInsets.only(bottom: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        color: notification.isRead
-            ? Colors.white
-            : const Color(0xFF132054).withOpacity(0.1),
         child: InkWell(
           onTap: () {
-            viewModel.markAsRead(notification.id);
+            context.read<NotificationViewModel>().markAsRead(notification.id);
             _handleNotificationTap(context, notification);
           },
-          borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildNotificationIcon(notification.type),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            notification.title,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: notification.isRead
-                                  ? FontWeight.normal
-                                  : FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            notification.message,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _formatDate(notification.createdAt),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
+                // Type Icon
+                _buildNotificationIcon(notification),
+                const SizedBox(width: 16),
+
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        notification.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: notification.isRead
+                              ? FontWeight.normal
+                              : FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        notification.message,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _getRelativeTime(notification.createdAt),
+                        style: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+
+                // Unread indicator
+                if (!notification.isRead)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.blue,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -234,49 +254,48 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
-  Widget _buildNotificationIcon(NotificationType type) {
-    IconData icon;
-    Color color;
+  Widget _buildNotificationIcon(NotificationModel notification) {
+    IconData iconData;
+    Color iconColor;
 
-    switch (type) {
+    switch (notification.type) {
       case NotificationType.event:
-        icon = Icons.event;
-        color = Colors.blue;
+        iconData = Icons.event;
+        iconColor = Colors.blue;
         break;
       case NotificationType.announcement:
-        icon = Icons.campaign;
-        color = Colors.orange;
+        iconData = Icons.campaign;
+        iconColor = Colors.orange;
         break;
       case NotificationType.reminder:
-        icon = Icons.alarm;
-        color = Colors.green;
+        iconData = Icons.alarm;
+        iconColor = Colors.purple;
         break;
-      case NotificationType.general:
-        icon = Icons.notifications;
-        color = Colors.grey;
-        break;
+      default:
+        iconData = Icons.notifications;
+        iconColor = Colors.grey;
     }
 
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: iconColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
-        icon,
-        color: color,
+        iconData,
+        color: iconColor,
         size: 24,
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _getRelativeTime(DateTime dateTime) {
     final now = DateTime.now();
-    final difference = now.difference(date);
+    final difference = now.difference(dateTime);
 
     if (difference.inDays > 7) {
-      return DateFormat('dd MMM yyyy, HH:mm').format(date);
+      return DateFormat('dd MMM yyyy', 'id_ID').format(dateTime);
     } else if (difference.inDays > 0) {
       return '${difference.inDays} hari yang lalu';
     } else if (difference.inHours > 0) {
@@ -289,18 +308,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   void _handleNotificationTap(
-    BuildContext context,
-    NotificationModel notification,
-  ) {
-    // Handle navigation based on notification type
+      BuildContext context, NotificationModel notification) {
+    context.read<NotificationViewModel>().markAsRead(notification.id);
+
     switch (notification.type) {
       case NotificationType.event:
         if (notification.eventId != null) {
-          Navigator.pushNamed(
-            context,
-            '/event-detail',
-            arguments: notification.eventId,
-          );
+          Navigator.pushNamed(context, '/event-detail',
+              arguments: notification.eventId);
         }
         break;
       case NotificationType.announcement:

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -52,14 +53,18 @@ class LoginViewModel extends ChangeNotifier {
         throw Exception('Invalid user role');
       }
 
+      // Set current user
+      _currentUser = userData;
+
       // Update FCM Token
-      await _updateFCMToken(userCredential.user!.uid);
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      if (fcmToken != null) {
+        await _firestoreService.updateUserFCMToken(
+            userCredential.user!.uid, fcmToken);
+      }
 
       // Subscribe to topics
       await _subscribeToTopics();
-
-      // Set current user
-      _currentUser = userData;
 
       _setLoading(false);
       return true;
@@ -76,94 +81,92 @@ class LoginViewModel extends ChangeNotifier {
 
       final UserCredential? userCredential =
           await _authService.signInWithGoogle();
-
       if (userCredential == null) {
         throw Exception('Google sign in cancelled');
       }
 
+      final user = userCredential.user!;
+
       // Validasi role
-      if (!await _authService.validateUserRole(userCredential.user!.uid)) {
+      if (!await _authService.validateUserRole(user.uid)) {
+        await FirebaseAuth.instance.signOut();
         throw Exception('Admin tidak dapat login melalui aplikasi mobile');
       }
 
-      final user = userCredential.user!;
       final bool isNewUser = await _authService.isNewUser(user.uid);
-
-      // Update FCM Token
-      await _updateFCMToken(user.uid);
+      // Get FCM Token
+      String? fcmToken;
+      try {
+        fcmToken = await FirebaseMessaging.instance.getToken();
+      } catch (e) {
+        print('Error getting FCM token: $e');
+      }
 
       if (isNewUser) {
-        // Subscribe to topics for new user
-        await _subscribeToTopics();
-
-        return {
-          'success': true,
-          'isNewUser': true,
-          'userData': {
+        try {
+          // Data untuk user baru dengan format yang sama seperti register biasa
+          final Map<String, dynamic> userData = {
             'id': user.uid,
-            'email': user.email,
-            'name': user.displayName,
+            'email': user.email ?? '',
+            'name': user.displayName ?? '',
             'photoUrl': user.photoURL,
+            'fcmToken': fcmToken,
             'role': 'user',
-          }
-        };
+            'birthDate': '',
+            'birthMonth': null,
+            'birthDay': null,
+            'phoneNumber': '',
+            'address': '',
+            'createdAt': Timestamp.now(),
+            'updatedAt': Timestamp.now(),
+          };
+
+          // Save user data
+          await _firestoreService
+              .saveUserData(UserModel.fromMap(user.uid, userData));
+          await _subscribeToTopics();
+
+          return {'success': true, 'isNewUser': true, 'userData': userData};
+        } catch (e) {
+          await FirebaseAuth.instance.signOut();
+          print('Error saving new user data: $e');
+          throw Exception('Failed to save user data');
+        }
       } else {
-        final userData = await _firestoreService.getUserData(user.uid);
-        if (userData == null) {
-          throw Exception('User data not found');
+        try {
+          final userData = await _firestoreService.getUserData(user.uid);
+          if (userData == null) {
+            await FirebaseAuth.instance.signOut();
+            throw Exception('User data not found');
+          }
+
+          if (userData.role != 'user') {
+            await FirebaseAuth.instance.signOut();
+            throw Exception('Invalid user role');
+          }
+
+          // Update FCM token if available
+          if (fcmToken != null) {
+            await _firestoreService.updateUserFCMToken(user.uid, fcmToken);
+          }
+
+          await _subscribeToTopics();
+          _currentUser = userData;
+
+          return {'success': true, 'isNewUser': false, 'userData': userData};
+        } catch (e) {
+          await FirebaseAuth.instance.signOut();
+          print('Error processing existing user: $e');
+          throw Exception('Failed to process user data');
         }
-
-        if (userData.role != 'user') {
-          throw Exception('Invalid user role');
-        }
-
-        // Subscribe to topics for existing user
-        await _subscribeToTopics();
-
-        _currentUser = userData;
-
-        return {'success': true, 'isNewUser': false, 'userData': userData};
       }
     } catch (e) {
-      _setError(_getErrorMessage(e));
+      print('SignInWithGoogle error: $e');
+      await FirebaseAuth.instance.signOut();
+      _setError(e.toString());
       return {'success': false, 'error': _errorMessage};
     } finally {
       _setLoading(false);
-    }
-  }
-
-  Future<void> _updateFCMToken(String userId) async {
-    try {
-      // Request permission for notifications
-      NotificationSettings settings =
-          await _firebaseMessaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-
-      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        // Get the token
-        String? token = await _firebaseMessaging.getToken();
-
-        if (token != null) {
-          // Save the token to Firestore menggunakan method yang ada
-          await _firestoreService.saveUserData(
-            UserModel(
-              id: userId,
-              email: _currentUser?.email ?? '',
-              name: _currentUser?.name ?? '',
-              fcmToken: token, // Tambahkan field ini di UserModel
-              role: _currentUser?.role ?? 'user',
-              updatedAt: DateTime.now(),
-            ),
-          );
-
-          print('FCM Token updated for user: $userId');
-        }
-      }
-    } catch (e) {
-      print('Error updating FCM token: $e');
     }
   }
 

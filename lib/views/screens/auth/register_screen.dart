@@ -12,6 +12,10 @@ class RegisterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen dimensions untuk responsive layout
+    final size = MediaQuery.of(context).size;
+    final padding = MediaQuery.of(context).padding;
+
     return ChangeNotifierProvider(
       create: (_) => RegisterViewModel(),
       child: Consumer<RegisterViewModel>(
@@ -39,170 +43,68 @@ class RegisterScreen extends StatelessWidget {
                 ),
                 child: SafeArea(
                   child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 48),
-                          Center(
-                            child: Image.asset(
-                              'assets/logo/hope_logo.png',
-                              height: 50,
-                            ),
-                          ),
-                          const SizedBox(height: 48),
-                          const Center(
-                            child: Text(
-                              'Daftar Akun',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: size.height - padding.top - padding.bottom,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: size.height * 0.05),
+
+                            // Logo Section
+                            Center(
+                              child: Image.asset(
+                                'assets/logo/hope_logo.png',
+                                height: size.height * 0.1,
                               ),
                             ),
-                          ),
-                          if (viewModel.errorMessage != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 16),
+                            SizedBox(height: size.height * 0.04),
+
+                            // Title Section
+                            const Center(
                               child: Text(
-                                viewModel.errorMessage!,
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 24),
-                          CustomTextField(
-                            label: 'Email',
-                            hintText: 'Cth : johndoe@gmail.com',
-                            controller: viewModel.emailController,
-                          ),
-                          const SizedBox(height: 16),
-                          CustomTextField(
-                            label: 'Nama',
-                            hintText: 'Cth : Johndoe',
-                            controller: viewModel.nameController,
-                          ),
-                          const SizedBox(height: 16),
-                          CustomTextField(
-                            label: 'Kata sandi',
-                            hintText: '••••••••••',
-                            isPassword: true,
-                            controller: viewModel.passwordController,
-                          ),
-                          const SizedBox(height: 16),
-                          CustomTextField(
-                            label: 'Alamat',
-                            hintText: 'Cth : Serayu 12 Malang',
-                            controller: viewModel.addressController,
-                          ),
-                          const SizedBox(height: 16),
-                          CustomDateField(
-                            label: 'Tanggal Lahir',
-                            controller: viewModel.birthDateController,
-                            onDateSelected: (date) =>
-                                viewModel.updateBirthDate(date),
-                            errorText: viewModel.errorMessage, // Opsional
-                          ),
-                          const SizedBox(height: 16),
-                          CustomTextField(
-                            label: 'No. HP/WA',
-                            hintText: 'Cth : 0812345678',
-                            controller: viewModel.phoneController,
-                          ),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: viewModel.isLoading
-                                  ? null
-                                  : () async {
-                                      if (await viewModel.register()) {
-                                        if (context.mounted) {
-                                          DialogHelper.showSuccessDialog(
-                                            context: context,
-                                            title: 'Registrasi Berhasil',
-                                            message:
-                                                'Akun Anda telah berhasil dibuat. Silahkan login untuk melanjutkan.',
-                                            buttonText: 'Login',
-                                            onPressed: () {
-                                              Navigator.pop(
-                                                  context); // Tutup dialog
-                                              Navigator.pushReplacementNamed(
-                                                  context, AppRoutes.login);
-                                            },
-                                          );
-                                        }
-                                      } else if (viewModel.errorMessage !=
-                                          null) {
-                                        // Tampilkan error dialog jika ada error
-                                        if (context.mounted) {
-                                          DialogHelper.showErrorDialog(
-                                            context: context,
-                                            title: 'Registrasi Gagal',
-                                            message: viewModel.errorMessage!,
-                                          );
-                                        }
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF132054),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: viewModel.isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Daftar',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                'Sudah terdaftar. Silahkan',
+                                'Daftar Akun',
                                 style: TextStyle(
                                   color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pushReplacementNamed(
-                                      context, AppRoutes.login);
-                                },
-                                style: TextButton.styleFrom(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 4),
-                                ),
-                                child: const Text(
-                                  'Masuk',
-                                  style: TextStyle(
-                                    color: Colors.blue,
+                            ),
+
+                            // Error Message
+                            if (viewModel.errorMessage != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Text(
+                                  viewModel.errorMessage!,
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
+                            SizedBox(height: size.height * 0.02),
+
+                            // Form Fields
+                            _buildFormFields(viewModel),
+
+                            SizedBox(height: size.height * 0.03),
+
+                            // Register Button
+                            _buildRegisterButton(context, viewModel),
+
+                            SizedBox(height: size.height * 0.02),
+
+                            // Login Link
+                            _buildLoginLink(context),
+
+                            SizedBox(height: size.height * 0.02),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -212,6 +114,138 @@ class RegisterScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildFormFields(RegisterViewModel viewModel) {
+    return Column(
+      children: [
+        CustomTextField(
+          label: 'Email',
+          hintText: 'Cth : johndoe@gmail.com',
+          controller: viewModel.emailController,
+        ),
+        const SizedBox(height: 16),
+        CustomTextField(
+          label: 'Nama',
+          hintText: 'Cth : Johndoe',
+          controller: viewModel.nameController,
+        ),
+        const SizedBox(height: 16),
+        CustomTextField(
+          label: 'Kata sandi',
+          hintText: '••••••••••',
+          isPassword: true,
+          controller: viewModel.passwordController,
+        ),
+        const SizedBox(height: 16),
+        CustomTextField(
+          label: 'Alamat',
+          hintText: 'Cth : Serayu 12 Malang',
+          controller: viewModel.addressController,
+          maxLines: 2,
+        ),
+        const SizedBox(height: 16),
+        CustomDateField(
+          label: 'Tanggal Lahir',
+          controller: viewModel.birthDateController,
+          onDateSelected: (date) => viewModel.updateBirthDate(date),
+          errorText: viewModel.errorMessage,
+        ),
+        const SizedBox(height: 16),
+        CustomTextField(
+          label: 'No. HP/WA',
+          hintText: 'Cth : 0812345678',
+          controller: viewModel.phoneController,
+          keyboardType: TextInputType.phone,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRegisterButton(
+      BuildContext context, RegisterViewModel viewModel) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: viewModel.isLoading
+            ? null
+            : () async {
+                if (await viewModel.register()) {
+                  if (context.mounted) {
+                    DialogHelper.showSuccessDialog(
+                      context: context,
+                      title: 'Registrasi Berhasil',
+                      message:
+                          'Akun Anda telah berhasil dibuat. Silahkan login untuk melanjutkan.',
+                      buttonText: 'Login',
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.pushReplacementNamed(
+                            context, AppRoutes.login);
+                      },
+                    );
+                  }
+                } else if (viewModel.errorMessage != null && context.mounted) {
+                  DialogHelper.showErrorDialog(
+                    context: context,
+                    title: 'Registrasi Gagal',
+                    message: viewModel.errorMessage!,
+                  );
+                }
+              },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF132054),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: viewModel.isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Text(
+                'Daftar',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildLoginLink(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          'Sudah terdaftar? Silahkan',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        TextButton(
+          onPressed: () =>
+              Navigator.pushReplacementNamed(context, AppRoutes.login),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+          ),
+          child: const Text(
+            'Masuk',
+            style: TextStyle(
+              color: Colors.blue,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

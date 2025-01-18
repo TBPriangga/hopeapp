@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -20,14 +23,17 @@ import 'package:hopeapp/viewsModels/youtube/youtube_viewmodel.dart';
 // Services
 import 'package:hopeapp/core/services/auth/auth_service.dart';
 import 'package:hopeapp/core/services/youtube/youtube_service.dart';
+import 'package:hopeapp/core/services/notifications/notifications_service.dart';
 
 // Routes
 import 'app/routes/app_routes.dart';
+import 'core/services/firestore_service.dart';
 import 'core/services/home/dailyWord_service.dart';
 import 'core/services/notifications/notifications_service.dart';
 import 'core/services/sermon/sermon_service.dart';
 import 'viewsModels/about/about_viewmodel.dart';
 import 'viewsModels/auth/edit_profile_viewmodel.dart';
+import 'viewsModels/auth/forgot_password_viewmodel.dart';
 import 'viewsModels/dailyWords/dailyWordList_viewmodel.dart';
 import 'viewsModels/dailyWords/dailyWord_viewmodel.dart';
 import 'viewsModels/event/event_viewmodel.dart';
@@ -227,12 +233,27 @@ void _handleNotificationTap(String? payload) {
   }
 }
 
+void setupFCMTokenRefresh() {
+  FirebaseMessaging.instance.onTokenRefresh.listen((String token) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirestoreService().updateUserFCMToken(user.uid, token);
+    }
+  });
+}
+
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
-    await initializeDateFormatting('id_ID', null);
 
+    // Perbaikan aktivasi App Check
+    await FirebaseAppCheck.instance.activate(
+      androidProvider:
+          kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+    );
+
+    await initializeDateFormatting('id_ID', null);
     await requestNotificationPermissions();
 
     tz.initializeTimeZones();
@@ -245,6 +266,7 @@ void main() async {
     await setupTerminatedStateNotificationHandler();
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    setupFCMTokenRefresh();
 
     runApp(const MyApp());
   } catch (e, stackTrace) {
@@ -272,6 +294,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CarouselViewModel()),
         ChangeNotifierProvider(create: (_) => BirthdayViewModel()),
         ChangeNotifierProvider(create: (_) => EventViewModel()),
+        ChangeNotifierProvider(create: (_) => ForgotPasswordViewModel()),
         ChangeNotifierProvider(
           create: (context) => SermonViewModel(
             sermonService: context.read<SermonService>(),

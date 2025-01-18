@@ -242,30 +242,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                   _buildDivider(),
                                   _buildMenuItem(
-                                    icon: Icons.settings_outlined,
-                                    title: 'Lorem',
-                                    onTap: () {
-                                      // Handle Lorem
-                                    },
-                                  ),
-                                  _buildDivider(),
-                                  _buildMenuItem(
-                                    icon: Icons.notifications_outlined,
-                                    title: 'Lorem',
-                                    onTap: () {
-                                      // Handle Lorem
-                                    },
-                                  ),
-                                  _buildDivider(),
-                                  _buildMenuItem(
-                                    icon: Icons.book_outlined,
-                                    title: 'Lorem',
-                                    onTap: () {
-                                      // Handle Lorem
-                                    },
-                                  ),
-                                  _buildDivider(),
-                                  _buildMenuItem(
                                     icon: Icons.lock_outline,
                                     title: 'Ubah Kata Sandi',
                                     onTap: () {

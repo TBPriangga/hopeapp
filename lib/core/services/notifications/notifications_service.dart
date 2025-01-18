@@ -12,6 +12,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import '../../../models/event/event_model.dart';
 import '../../../models/home/daily_word_model.dart';
 import '../../../models/notifications/notifications_model.dart';
+import '../firestore_service.dart';
 
 class NotificationRetryConfig {
   final int maxAttempts;
@@ -950,5 +951,180 @@ class NotificationService {
       'isRead': false,
       'createdAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  Future<void> updateNotificationBadge(int count) async {
+    try {
+      // Untuk Android, badge count biasanya dihandle oleh launcher
+      // Kita bisa menggunakan plugin khusus seperti flutter_app_badger
+      // Atau mengandalkan OS notification system
+
+      final androidDetails = AndroidNotificationDetails(
+        'badge_channel',
+        'Badge Updates',
+        channelDescription: 'Channel for updating notification badge',
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        number: count, // This sets the badge number on supported launchers
+      );
+
+      // Update badge melalui silent notification jika diperlukan
+      if (count > 0) {
+        await _localNotifications.show(
+          0, // Use consistent ID for badge updates
+          '', // Empty title for silent notification
+          '', // Empty body
+          NotificationDetails(android: androidDetails),
+        );
+      } else {
+        // Jika count 0, cancel notification untuk menghapus badge
+        await _localNotifications.cancel(0);
+      }
+
+      // Log badge update
+      await _firestore.collection('notification_logs').add({
+        'type': 'badge_update',
+        'count': count,
+        'timestamp': FieldValue.serverTimestamp(),
+        'userId': FirebaseAuth.instance.currentUser?.uid,
+        'success': true,
+      });
+    } catch (e) {
+      await _logNotificationError('badge_update', e.toString());
+    }
+  }
+
+  // Add method for handling notification action buttons
+  Future<void> addNotificationWithAction({
+    required String title,
+    required String body,
+    required String channelId,
+    required List<NotificationAction> actions,
+  }) async {
+    try {
+      final androidDetails = AndroidNotificationDetails(
+        channelId,
+        channelId,
+        channelDescription: 'Notification with actions',
+        importance: Importance.high,
+        priority: Priority.high,
+        actions: actions
+            .map((action) => AndroidNotificationAction(
+                  action.id,
+                  action.title,
+                  showsUserInterface: action.showsUserInterface,
+                  cancelNotification: action.cancelNotification,
+                ))
+            .toList(),
+      );
+
+      await _localNotifications.show(
+        DateTime.now().millisecond,
+        title,
+        body,
+        NotificationDetails(android: androidDetails),
+      );
+
+      await _firestore.collection('notification_logs').add({
+        'type': 'notification_with_action',
+        'title': title,
+        'body': body,
+        'channelId': channelId,
+        'actions': actions.map((a) => a.toMap()).toList(),
+        'timestamp': FieldValue.serverTimestamp(),
+        'success': true,
+      });
+    } catch (e) {
+      await _logNotificationError('notification_with_action', e.toString());
+    }
+  }
+
+  // Add method for progress notifications
+  Future<void> showProgressNotification({
+    required String title,
+    required String body,
+    required int progress,
+    required int maxProgress,
+    required String channelId,
+  }) async {
+    try {
+      final androidDetails = AndroidNotificationDetails(
+        channelId,
+        channelId,
+        channelDescription: 'Notification with progress',
+        importance:
+            Importance.low, // Lower importance for progress notifications
+        priority: Priority.low,
+        showProgress: true,
+        maxProgress: maxProgress,
+        progress: progress,
+        onlyAlertOnce: true, // Prevent multiple alerts while progress updates
+      );
+
+      await _localNotifications.show(
+        DateTime.now().millisecond,
+        title,
+        body,
+        NotificationDetails(android: androidDetails),
+      );
+    } catch (e) {
+      await _logNotificationError('progress_notification', e.toString());
+    }
+  }
+
+  // Add cleanup method for old notifications
+  Future<void> cleanupOldNotifications() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+
+      final oldNotifications = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('notifications')
+          .where('createdAt', isLessThan: thirtyDaysAgo)
+          .get();
+
+      final batch = _firestore.batch();
+      for (var doc in oldNotifications.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      await _firestore.collection('notification_logs').add({
+        'type': 'cleanup',
+        'count': oldNotifications.docs.length,
+        'timestamp': FieldValue.serverTimestamp(),
+        'success': true,
+      });
+    } catch (e) {
+      await _logNotificationError('cleanup', e.toString());
+    }
+  }
+}
+
+// Helper class for notification actions
+class NotificationAction {
+  final String id;
+  final String title;
+  final bool showsUserInterface;
+  final bool cancelNotification;
+
+  NotificationAction({
+    required this.id,
+    required this.title,
+    this.showsUserInterface = true,
+    this.cancelNotification = true,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'showsUserInterface': showsUserInterface,
+      'cancelNotification': cancelNotification,
+    };
   }
 }

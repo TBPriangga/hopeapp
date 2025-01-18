@@ -31,8 +31,9 @@ class _SplashScreenState extends State<SplashScreen> {
             colors: [
               Color(0xFF132054),
               Color(0xFF2B478A),
+              Color(0xFF132054),
             ],
-            stops: [0.0, 1.0],
+            stops: [0.0, 0.5, 1.0],
           ),
         ),
         child: Center(
@@ -41,8 +42,8 @@ class _SplashScreenState extends State<SplashScreen> {
             children: [
               Image.asset(
                 'assets/logo/hope_logo.png',
-                height: 120,
-                width: 120,
+                height: 820,
+                width: 820,
               ),
               const SizedBox(height: 24),
             ],

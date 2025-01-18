@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import '../../../../core/utils/birthday_verse.dart';
 import '../../../../models/home/birthday_model.dart';
 
@@ -23,31 +22,40 @@ class BirthdayPopup extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Header with photo
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          Container(
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
             child: Stack(
               children: [
-                // Background Image
-                Image.network(
-                  birthday.photoUrl ?? '',
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 200,
-                      color: Colors.blue[50],
-                      child: const Icon(
-                        Icons.person,
-                        size: 64,
-                        color: Colors.blue,
-                      ),
-                    );
-                  },
+                // Photo Container dengan AspectRatio 1:1
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: Image.network(
+                      birthday.photoUrl ?? '',
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.blue[50],
+                          child: const Icon(
+                            Icons.person,
+                            size: 64,
+                            color: Colors.blue,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
+
                 // Gradient Overlay
                 Positioned.fill(
-                  child: Container(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
@@ -57,9 +65,12 @@ class BirthdayPopup extends StatelessWidget {
                           Colors.black.withOpacity(0.7),
                         ],
                       ),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(16)),
                     ),
                   ),
                 ),
+
                 // Close Button
                 Positioned(
                   top: 8,
@@ -69,6 +80,7 @@ class BirthdayPopup extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
+
                 // Name and Date at bottom
                 Positioned(
                   bottom: 16,
@@ -83,6 +95,13 @@ class BirthdayPopup extends StatelessWidget {
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(0, 1),
+                              blurRadius: 3.0,
+                              color: Colors.black45,
+                            ),
+                          ],
                         ),
                       ),
                       Text(
@@ -91,6 +110,13 @@ class BirthdayPopup extends StatelessWidget {
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(0, 1),
+                              blurRadius: 3.0,
+                              color: Colors.black45,
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -99,6 +125,7 @@ class BirthdayPopup extends StatelessWidget {
               ],
             ),
           ),
+
           // Birthday Message Section
           Padding(
             padding: const EdgeInsets.all(24),

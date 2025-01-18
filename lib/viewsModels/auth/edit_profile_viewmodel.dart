@@ -1,25 +1,24 @@
 import 'dart:io';
-import 'package:path/path.dart' as path;
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import '../../models/user_model.dart';
 import '../../core/services/auth/auth_service.dart';
 import '../../core/services/firestore_service.dart';
-import '../../models/user_model.dart';
-import 'package:intl/intl.dart';
 
-class EditProfileViewModel extends ChangeNotifier {
+class EditProfileViewModel with ChangeNotifier {
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
   final ImagePicker _imagePicker = ImagePicker();
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   bool _isLoading = false;
+  bool _isUploadingImage = false;
   String? _errorMessage;
   UserModel? _userData;
-  DateTime? _selectedDate;
   File? _selectedImage;
-  bool _isUploadingImage = false;
+  DateTime? _selectedDate;
 
   // Controllers
   final TextEditingController nameController = TextEditingController();
@@ -30,12 +29,12 @@ class EditProfileViewModel extends ChangeNotifier {
 
   // Getters
   bool get isLoading => _isLoading;
+  bool get isUploadingImage => _isUploadingImage;
   String? get errorMessage => _errorMessage;
   UserModel? get userData => _userData;
   File? get selectedImage => _selectedImage;
-  bool get isUploadingImage => _isUploadingImage;
 
-  // Pick image from gallery
+  // Memilih foto dari galeri
   Future<void> pickImage() async {
     try {
       final XFile? pickedImage = await _imagePicker.pickImage(
@@ -46,15 +45,14 @@ class EditProfileViewModel extends ChangeNotifier {
       );
 
       if (pickedImage != null) {
-        _selectedImage = File(pickedImage.path);
-        notifyListeners();
+        await _cropImage(pickedImage.path);
       }
     } catch (e) {
-      _setError('Failed to pick image: $e');
+      _setError('Gagal memilih foto: $e');
     }
   }
 
-  // Pick image from camera
+  // Mengambil foto dari kamera
   Future<void> takePhoto() async {
     try {
       final XFile? pickedImage = await _imagePicker.pickImage(
@@ -65,15 +63,45 @@ class EditProfileViewModel extends ChangeNotifier {
       );
 
       if (pickedImage != null) {
-        _selectedImage = File(pickedImage.path);
-        notifyListeners();
+        await _cropImage(pickedImage.path);
       }
     } catch (e) {
-      _setError('Failed to take photo: $e');
+      _setError('Gagal mengambil foto: $e');
     }
   }
 
-// Upload image to Firebase Storage
+  // Fungsi untuk crop foto
+  Future<void> _cropImage(String imagePath) async {
+    try {
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imagePath,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 80,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Sesuaikan Foto',
+            toolbarColor: const Color(0xFF3949AB),
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+            hideBottomControls: true,
+            statusBarColor: const Color(0xFF3949AB),
+            activeControlsWidgetColor: const Color(0xFF3949AB),
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        _selectedImage = File(croppedFile.path);
+        notifyListeners();
+      }
+    } catch (e) {
+      _setError('Gagal melakukan crop foto: $e');
+    }
+  }
+
+  // Upload foto ke Firebase Storage
   Future<String?> _uploadImage() async {
     if (_selectedImage == null) return _userData?.photoUrl;
 
@@ -81,24 +109,17 @@ class EditProfileViewModel extends ChangeNotifier {
       _isUploadingImage = true;
       notifyListeners();
 
-      final user = _authService.currentUser;
-      if (user == null) throw Exception('User not found');
-
       final String fileName =
-          'profile_${DateTime.now().millisecondsSinceEpoch}${path.extension(_selectedImage!.path)}';
-      final Reference storageRef = _storage
+          'profile_${DateTime.now().millisecondsSinceEpoch}${_selectedImage!.path.split('.').last}';
+      final Reference ref = _storage
           .ref()
           .child('profile_images')
-          .child(user.uid)
+          .child(_userData!.id)
           .child(fileName);
 
-      final UploadTask uploadTask = storageRef.putFile(_selectedImage!);
-
-      // Wait for upload to complete
-      await uploadTask.whenComplete(() {});
-
-      // Get download URL
-      final String downloadUrl = await storageRef.getDownloadURL();
+      final UploadTask uploadTask = ref.putFile(_selectedImage!);
+      final TaskSnapshot snapshot = await uploadTask.whenComplete(() {});
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
 
       _isUploadingImage = false;
       notifyListeners();
@@ -106,13 +127,13 @@ class EditProfileViewModel extends ChangeNotifier {
       return downloadUrl;
     } catch (e) {
       _isUploadingImage = false;
-      _setError('Failed to upload image: $e');
+      _setError('Gagal mengupload foto: $e');
       notifyListeners();
       return null;
     }
   }
 
-  // Load user data
+  // Memuat data pengguna
   Future<void> loadUserData() async {
     try {
       _setLoading(true);
@@ -121,103 +142,76 @@ class EditProfileViewModel extends ChangeNotifier {
         final userData = await _firestoreService.getUserData(user.uid);
         if (userData != null) {
           _userData = userData;
-          // Pre-fill form data
-          nameController.text = userData.name;
-          emailController.text = userData.email;
-          phoneController.text = userData.phoneNumber ?? '';
-          addressController.text = userData.address ?? '';
-          if (userData.birthDate != null) {
-            _selectedDate = userData.birthDate;
-            birthDateController.text =
-                DateFormat('dd/MM/yyyy').format(userData.birthDate!);
-          }
+          _initializeControllers();
         }
       }
     } catch (e) {
-      _setError('Failed to load user data: $e');
+      _setError('Gagal memuat data pengguna: $e');
     } finally {
       _setLoading(false);
     }
   }
 
-  // Update birth date
+  void _initializeControllers() {
+    if (_userData != null) {
+      nameController.text = _userData!.name;
+      emailController.text = _userData!.email;
+      phoneController.text = _userData!.phoneNumber ?? '';
+      addressController.text = _userData!.address ?? '';
+      if (_userData!.birthDate != null) {
+        _selectedDate = _userData!.birthDate;
+        birthDateController.text = _userData!.formattedBirthDate;
+      }
+    }
+  }
+
+  // Memperbarui tanggal lahir
   void updateBirthDate(DateTime date) {
     _selectedDate = date;
-    birthDateController.text = DateFormat('dd/MM/yyyy').format(date);
+    birthDateController.text = date.toString().split(' ')[0];
     notifyListeners();
   }
 
-  // Save profile changes
+  // Menyimpan profil
   Future<bool> saveProfile() async {
-    if (!_validateInputs()) return false;
-
     try {
       _setLoading(true);
 
-      // Upload image first if selected
-      String? photoUrl = await _uploadImage();
+      final String? photoUrl = await _uploadImage();
 
-      final user = _authService.currentUser;
-      if (user == null) throw Exception('User not found');
+      if (_userData == null) throw Exception('Data pengguna tidak ditemukan');
 
-      // Create updated user model
       final updatedUser = UserModel(
-        id: user.uid,
+        id: _userData!.id,
         email: emailController.text.trim(),
         name: nameController.text.trim(),
         address: addressController.text.trim(),
         birthDate: _selectedDate,
         phoneNumber: phoneController.text.trim(),
-        photoUrl:
-            photoUrl ?? _userData?.photoUrl, // Use new URL or keep existing
+        photoUrl: photoUrl,
+        role: _userData!.role,
+        updatedAt: DateTime.now(),
       );
 
-      // Save to Firestore
       await _firestoreService.saveUserData(updatedUser);
 
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError('Failed to update profile: $e');
+      _setError(e.toString());
       return false;
     }
-  }
-
-  bool _validateInputs() {
-    if (nameController.text.isEmpty || emailController.text.isEmpty) {
-      _setError('Name and email are required');
-      return false;
-    }
-
-    // Email validation
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-        .hasMatch(emailController.text)) {
-      _setError('Invalid email format');
-      return false;
-    }
-
-    // Phone validation (if provided)
-    if (phoneController.text.isNotEmpty &&
-        !RegExp(r'^[0-9-]+$').hasMatch(phoneController.text)) {
-      _setError('Invalid phone number format');
-      return false;
-    }
-
-    return true;
   }
 
   void _setLoading(bool value) {
-    if (_isLoading != value) {
-      _isLoading = value;
-      notifyListeners();
-    }
+    _isLoading = value;
+    notifyListeners();
   }
 
-  void _setError(String? value) {
-    if (_errorMessage != value) {
-      _errorMessage = value;
-      notifyListeners();
-    }
+  void _setError(String message) {
+    _errorMessage = message;
+    _isLoading = false;
+    notifyListeners();
   }
 
   @override

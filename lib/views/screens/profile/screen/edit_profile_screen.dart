@@ -213,7 +213,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             controller: viewModel.emailController,
                             hintText: 'Masukkan email anda',
                             keyboardType: TextInputType.emailAddress,
-                            enabled: false, // Email tidak bisa diubah
+                            enabled: false,
                           ),
                           const SizedBox(height: 16),
 
@@ -287,10 +287,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                                 'Profile berhasil diperbarui',
                                             buttonText: 'OK',
                                             onPressed: () {
-                                              Navigator.pop(
-                                                  context); // Close dialog
-                                              Navigator.pop(
-                                                  context); // Back to profile
+                                              Navigator.pop(context);
+                                              Navigator.pop(context);
                                             },
                                           );
                                         }

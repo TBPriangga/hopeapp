@@ -120,7 +120,7 @@ class OfferingInfoScreen extends StatelessWidget {
                       onTap: () => _showQRDialog(
                         context,
                         title: 'Persembahan',
-                        qrAsset: 'assets/images/qr_persembahan.png',
+                        qrAsset: 'assets/images/persembahan.png',
                         description:
                             'Scan QR code ini untuk memberikan persembahan umum',
                       ),
@@ -135,7 +135,7 @@ class OfferingInfoScreen extends StatelessWidget {
                       onTap: () => _showQRDialog(
                         context,
                         title: 'Perpuluhan',
-                        qrAsset: 'assets/images/qr_perpuluhan.png',
+                        qrAsset: 'assets/images/perpuluhan.png',
                         description:
                             'Scan QR code ini untuk memberikan perpuluhan',
                       ),
@@ -150,7 +150,7 @@ class OfferingInfoScreen extends StatelessWidget {
                       onTap: () => _showQRDialog(
                         context,
                         title: 'Pembangunan',
-                        qrAsset: 'assets/images/qr_pembangunan.png',
+                        qrAsset: 'assets/images/pembangunan.png',
                         description: 'Scan QR code ini untuk dana pembangunan',
                       ),
                     ),
@@ -170,15 +170,9 @@ class OfferingInfoScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               _buildBankAccount(
-                bankName: 'BCA',
-                accountNumber: '1234567890',
-                accountName: 'GBI Pengharapan',
-              ),
-              const SizedBox(height: 12),
-              _buildBankAccount(
-                bankName: 'Mandiri',
-                accountNumber: '0987654321',
-                accountName: 'GBI Pengharapan',
+                bankName: 'CIMB Niaga',
+                accountNumber: '706242593300',
+                accountName: 'Gereja Baptis Indonesia Pengharapan Surabaya',
               ),
 
               // Report Button

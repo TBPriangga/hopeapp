@@ -48,3 +48,4 @@ GoogleService-Info.plist
 firebase_options.dart
 
 lib/core/config/env.dart
+.vscode/templates

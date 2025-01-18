@@ -149,7 +149,7 @@ class CompleteProfileScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     CustomTextField(
                       controller: viewModel.nameController,
-                      enabled: false,
+                      enabled: true,
                       hintText: 'Nama',
                     ),
                     const SizedBox(height: 16),

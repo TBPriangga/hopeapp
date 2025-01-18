@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../app/routes/app_routes.dart';
+import '../screens/notifications/notifications_badge.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onMenuPressed;
@@ -18,17 +18,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: onMenuPressed,
       ),
       title: Image.asset(
-        'assets/logo/hope_logo.png',
-        height: 40,
+        'assets/logo/hope_logo3.png',
+        height: 140,
       ),
       centerTitle: true,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications, color: Colors.white),
-          onPressed: () {
-            Navigator.pushNamed(context, AppRoutes.notification);
-          },
-        ),
+      actions: const [
+        NotificationBadge(),
       ],
     );
   }
