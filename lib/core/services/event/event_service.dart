@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../../../models/event/event_model.dart';
 
 class EventService {
@@ -24,7 +23,7 @@ class EventService {
     return _firestore
         .collection('events')
         .where('isActive', isEqualTo: true)
-        .orderBy('date')
+        .orderBy('date', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => EventModel.fromMap(doc.id, doc.data()))

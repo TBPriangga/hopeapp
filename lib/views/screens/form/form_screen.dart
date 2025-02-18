@@ -65,6 +65,12 @@ class _FormScreenState extends State<FormScreen> {
         'description': 'Pendaftaran Keanggotaan/Baptisan',
         'route': AppRoutes.baptismRegistration,
       },
+      {
+        'icon': Icons.child_care,
+        'label': 'PENYERAHAN ANAK',
+        'description': 'Pendaftaran Penyerahan Anak',
+        'route': AppRoutes.childDedication,
+      },
     ];
 
     return Scaffold(
@@ -86,7 +92,7 @@ class _FormScreenState extends State<FormScreen> {
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 title: const Text(
-                  'Forms',
+                  'Menu',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -109,7 +115,7 @@ class _FormScreenState extends State<FormScreen> {
                     final menu = formMenus[index];
                     return GestureDetector(
                       onTap: () {
-                        Navigator.pushNamed(context, menu['route']);
+                        Navigator.pushNamed(context, menu['route'] ?? '');
                       },
                       child: Container(
                         decoration: BoxDecoration(

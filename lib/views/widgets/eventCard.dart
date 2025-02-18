@@ -24,32 +24,53 @@ class EventCard extends StatelessWidget {
       child: Container(
         width: 300,
         margin: const EdgeInsets.only(right: 16),
-        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: const Color(0xFFEFE5DC),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            // Thumbnail Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                event.imageUrl,
-                width: 66,
-                height: 66,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.error),
-                  );
-                },
+            Flexible(
+              flex: 2,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.network(
+                    event.imageDetailUrl,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        return child;
+                      }
+                      return Container(
+                        color: Colors.grey[200],
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                            color: const Color(0xFF132054),
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.error),
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 12),
             // Content
-            Expanded(
+            Flexible(
+              flex: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -96,6 +117,7 @@ class EventCard extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(width: 12),
           ],
         ),
       ),

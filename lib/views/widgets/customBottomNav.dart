@@ -36,8 +36,9 @@ class CustomBottomNav extends StatelessWidget {
         }
       },
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: const Color(0xFF132054),
-      unselectedItemColor: Colors.grey,
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.grey[400],
+      backgroundColor: const Color(0xFF132054),
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home_outlined),
@@ -47,7 +48,7 @@ class CustomBottomNav extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.description_outlined),
           activeIcon: Icon(Icons.description),
-          label: 'Forms',
+          label: 'Menu',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.menu_book_outlined),

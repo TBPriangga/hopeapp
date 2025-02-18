@@ -29,8 +29,7 @@ class DotIndicator extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color:
-                  currentIndex == index ? const Color(0xFF132054) : Colors.grey,
+              color: currentIndex == index ? Colors.white : Colors.grey,
             ),
           ),
         ),

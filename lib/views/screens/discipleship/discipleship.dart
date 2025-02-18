@@ -356,7 +356,8 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
                       padding: const EdgeInsets.only(right: 8),
                       child: FilterChip(
                         selected: isSelected,
-                        backgroundColor: Colors.black.withOpacity(0.1),
+                        backgroundColor: Colors.black.withOpacity(
+                            0.3), // Warna lebih gelap untuk kontras
                         selectedColor: Colors.white,
                         checkmarkColor: const Color(0xFF132054),
                         label: Text(
@@ -365,6 +366,9 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
                             color: isSelected
                                 ? const Color(0xFF132054)
                                 : Colors.white,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                         onSelected: (selected) {

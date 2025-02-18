@@ -18,6 +18,7 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
   final int _selectedIndex = 2;
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -30,6 +31,90 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DailyWordListViewModel>().loadDailyWords();
     });
+  }
+
+  Future<void> _selectMonth(BuildContext context) async {
+    final DateTime? picked = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF132054),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: DatePickerDialog(
+            initialDate: _selectedDate ?? DateTime.now(),
+            firstDate: DateTime(2020),
+            lastDate: DateTime(2030),
+            initialEntryMode: DatePickerEntryMode.calendarOnly,
+          ),
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        // Set tanggal ke awal bulan untuk konsistensi
+        _selectedDate = DateTime(picked.year, picked.month, 1);
+        context.read<DailyWordListViewModel>().filterByMonth(_selectedDate!);
+      });
+    }
+  }
+
+  Widget _buildDateFilter() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () => _selectMonth(context),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _selectedDate != null
+                          ? DateFormat('MMMM yyyy', 'id_ID')
+                              .format(_selectedDate!)
+                          : 'Pilih Bulan',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.calendar_today,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (_selectedDate != null)
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _selectedDate = null;
+                  context.read<DailyWordListViewModel>().refresh();
+                });
+              },
+            ),
+        ],
+      ),
+    );
   }
 
   void _onScroll() {
@@ -77,13 +162,11 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
               Color(0xFF132054),
               Color(0xFF2B478A),
             ],
-            stops: [0.0, 1.0],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // App Bar
               AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
@@ -100,7 +183,7 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
                         controller: _searchController,
                         style: const TextStyle(color: Colors.white),
                         decoration: const InputDecoration(
-                          hintText: 'Search...',
+                          hintText: 'Cari renungan...',
                           hintStyle: TextStyle(color: Colors.white70),
                           border: InputBorder.none,
                         ),
@@ -112,7 +195,10 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
                       ),
                 actions: [
                   IconButton(
-                    icon: Icon(_isSearching ? Icons.close : Icons.search),
+                    icon: Icon(
+                      _isSearching ? Icons.close : Icons.search,
+                      color: Colors.white,
+                    ),
                     onPressed: () {
                       setState(() {
                         _isSearching = !_isSearching;
@@ -125,8 +211,7 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
                   ),
                 ],
               ),
-
-              // Content
+              _buildDateFilter(),
               Expanded(
                 child: Consumer<DailyWordListViewModel>(
                   builder: (context, viewModel, child) {
@@ -150,7 +235,7 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
                                 backgroundColor: Colors.white,
                                 foregroundColor: const Color(0xFF132054),
                               ),
-                              child: const Text('Retry'),
+                              child: const Text('Coba Lagi'),
                             ),
                           ],
                         ),
@@ -158,10 +243,27 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
                     }
 
                     if (viewModel.dailyWords.isEmpty && !viewModel.isLoading) {
-                      return const Center(
-                        child: Text(
-                          'No daily words found',
-                          style: TextStyle(color: Colors.white),
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Colors.white.withOpacity(0.7),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _selectedDate != null
+                                  ? 'Tidak ada renungan\npada bulan ${DateFormat('MMMM yyyy', 'id_ID').format(_selectedDate!)}'
+                                  : 'Tidak ada renungan ditemukan',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }

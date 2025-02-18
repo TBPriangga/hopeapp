@@ -48,7 +48,8 @@ class _SermonSeriesDetailScreenState extends State<SermonSeriesDetailScreen> {
 
   Widget _buildSermonsList(SermonViewModel viewModel) {
     if (viewModel.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+          child: CircularProgressIndicator(color: Colors.white));
     }
 
     if (viewModel.error != null) {
@@ -59,7 +60,7 @@ class _SermonSeriesDetailScreenState extends State<SermonSeriesDetailScreen> {
             Text(
               'Error: ${viewModel.error}',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
+              style: const TextStyle(color: Colors.white),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
@@ -71,8 +72,8 @@ class _SermonSeriesDetailScreenState extends State<SermonSeriesDetailScreen> {
               icon: const Icon(Icons.refresh),
               label: const Text('Coba Lagi'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF132054),
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF132054),
               ),
             ),
           ],
@@ -83,7 +84,10 @@ class _SermonSeriesDetailScreenState extends State<SermonSeriesDetailScreen> {
     final sermons = viewModel.sermons;
     if (sermons.isEmpty) {
       return const Center(
-        child: Text('Tidak ada khotbah dalam series ini'),
+        child: Text(
+          'Tidak ada khotbah dalam series ini',
+          style: TextStyle(color: Colors.white),
+        ),
       );
     }
 
@@ -181,47 +185,53 @@ class _SermonSeriesDetailScreenState extends State<SermonSeriesDetailScreen> {
         final selectedSeries = viewModel.selectedSeries;
 
         return Scaffold(
-          backgroundColor: Colors.grey[50],
-          appBar: AppBar(
-            backgroundColor: const Color(0xFF132054),
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: Text(
-              selectedSeries?.title ?? 'Series Detail',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF132054),
+                  Color(0xFF2B478A),
+                ],
               ),
             ),
-            centerTitle: true,
-          ),
-          body: Column(
-            children: [
-              // Series Header
-              if (selectedSeries != null)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF132054),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  AppBar(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon:
+                          const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    title: selectedSeries != null
+                        ? Text(
+                            selectedSeries.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          )
+                        : const Text(
+                            'Series Detail',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                    centerTitle: true,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        selectedSeries.title,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
+
+                  // Series Header
+                  if (selectedSeries != null)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
                         selectedSeries.description,
                         style: const TextStyle(
                           fontSize: 14,
@@ -229,15 +239,15 @@ class _SermonSeriesDetailScreenState extends State<SermonSeriesDetailScreen> {
                           height: 1.5,
                         ),
                       ),
-                    ],
-                  ),
-                ),
+                    ),
 
-              // Sermons List
-              Expanded(
-                child: _buildSermonsList(viewModel),
+                  // Sermons List
+                  Expanded(
+                    child: _buildSermonsList(viewModel),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },

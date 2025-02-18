@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../viewsModels/home/carousel_viewmodel.dart';
 import '../../../widgets/customAppBar.dart';
-import '../../../widgets/customSearchBar.dart';
 import '../../../widgets/customBottomNav.dart';
 import '../widget/DailyWordSection.dart';
 import '../widget/birthdaySection.dart';
@@ -44,33 +43,48 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        onMenuPressed: () {},
-      ),
-      body: Consumer<CarouselViewModel>(
-        builder: (context, carouselViewModel, child) {
-          return RefreshIndicator(
-            onRefresh: () => _refreshHome(context),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: CustomSearchBar(
-                      hintText: 'Cari...',
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF132054),
+              Color(0xFF2B478A),
+            ],
+          ),
+        ),
+        child: Column(
+          children: [
+            const CustomAppBar(
+              onMenuPressed: null,
+            ),
+            const SizedBox(height: 30),
+            Expanded(
+              child: Consumer<CarouselViewModel>(
+                builder: (context, carouselViewModel, child) {
+                  return RefreshIndicator(
+                    onRefresh: () => _refreshHome(context),
+                    child: const SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          HomeCarousel(),
+                          DailyWordSection(),
+                          BirthdaySection(),
+                          SizedBox(height: 16),
+                          MenuGridSection(),
+                          SizedBox(height: 08),
+                          EventListSection(),
+                        ],
+                      ),
                     ),
-                  ),
-                  const HomeCarousel(),
-                  const DailyWordSection(),
-                  const BirthdaySection(),
-                  const MenuGridSection(),
-                  const EventListSection(),
-                ],
+                  );
+                },
               ),
             ),
-          );
-        },
+          ],
+        ),
       ),
       bottomNavigationBar: CustomBottomNav(
         selectedIndex: _selectedIndex,

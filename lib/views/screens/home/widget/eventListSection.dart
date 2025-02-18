@@ -25,6 +25,7 @@ class EventListSection extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   TextButton(
@@ -48,7 +49,7 @@ class EventListSection extends StatelessWidget {
                     child: Text(
                       'Lihat Semua',
                       style: TextStyle(
-                        color: Colors.blue[600],
+                        color: Colors.white,
                         fontSize: 14,
                       ),
                     ),
@@ -72,7 +73,10 @@ class EventListSection extends StatelessWidget {
                     final events = snapshot.data!;
                     if (events.isEmpty) {
                       return const Center(
-                        child: Text('Tidak ada agenda kegiatan'),
+                        child: Text(
+                          'Tidak ada agenda kegiatan',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       );
                     }
 

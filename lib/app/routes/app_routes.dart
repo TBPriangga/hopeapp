@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hopeapp/views/screens/form/childDedication.dart';
 import 'package:hopeapp/views/screens/sermons/detail_sermon_screen.dart';
 import 'package:hopeapp/views/screens/sermons/save_sermon_screen.dart';
 import 'package:hopeapp/views/screens/sermons/sermon_screen.dart';
@@ -65,6 +66,7 @@ class AppRoutes {
   static const String sermonSeriesDetail = '/sermon-series-detail';
   static const String notificationTest = '/notification-test';
   static const String forgotPassword = '/forgot-password';
+  static const String childDedication = '/child-dedication';
 
   static Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
@@ -102,5 +104,6 @@ class AppRoutes {
     sermonSeriesDetail: (context) => const SermonSeriesDetailScreen(),
     notificationTest: (context) => const NotificationTestScreen(),
     forgotPassword: (context) => const ForgotPasswordScreen(),
+    childDedication: (context) => const ChildDedicationScreen(),
   };
 }

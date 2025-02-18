@@ -46,6 +46,7 @@ class DailyWordService {
   Future<List<DailyWordModel>> getPastDailyWords({
     DailyWordModel? lastDocument,
     int limit = 15,
+    DateTime? endDate,
   }) async {
     try {
       print(
@@ -53,9 +54,14 @@ class DailyWordService {
 
       Query query = _firestore
           .collection('daily_words')
-          .where('isActive', isEqualTo: true)
-          .orderBy('date', descending: true)
-          .limit(limit);
+          .where('isActive', isEqualTo: true);
+
+      // Tambahkan filter tanggal jika endDate tersedia
+      if (endDate != null) {
+        query = query.where('date', isLessThanOrEqualTo: endDate);
+      }
+
+      query = query.orderBy('date', descending: true).limit(limit);
 
       if (lastDocument != null) {
         final lastDoc = await _firestore
@@ -93,7 +99,10 @@ class DailyWordService {
     }
   }
 
-  Future<List<DailyWordModel>> searchDailyWords(String query) async {
+  Future<List<DailyWordModel>> searchDailyWords(
+    String query, {
+    DateTime? endDate,
+  }) async {
     try {
       print('Searching daily words with query: $query');
 
@@ -102,11 +111,16 @@ class DailyWordService {
         return [];
       }
 
-      final snapshot = await _firestore
+      Query baseQuery = _firestore
           .collection('daily_words')
-          .where('isActive', isEqualTo: true)
-          .orderBy('date', descending: true)
-          .get();
+          .where('isActive', isEqualTo: true);
+
+      // Tambahkan filter tanggal jika endDate tersedia
+      if (endDate != null) {
+        baseQuery = baseQuery.where('date', isLessThanOrEqualTo: endDate);
+      }
+
+      final snapshot = await baseQuery.orderBy('date', descending: true).get();
 
       print('Retrieved ${snapshot.docs.length} documents for search');
 

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import '../../../core/utils/youtube_helper.dart';
 import '../../widgets/customBottomNav.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -14,34 +15,69 @@ class _AboutScreenState extends State<AboutScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final int _selectedIndex = 3;
-
-  late YoutubePlayerController _youtubeController;
-  bool _isPlayerReady = false;
+  WebViewController? _youtubeController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _youtubeController = YoutubePlayerController(
-      initialVideoId: 'xkOOmwk-BWI',
-      flags: const YoutubePlayerFlags(
-        autoPlay: false,
-        mute: false,
-        enableCaption: true,
-      ),
-    )..addListener(_onYoutubePlayerStateChange);
+    _initializeYoutubePlayer();
   }
 
-  void _onYoutubePlayerStateChange() {
-    if (_youtubeController.value.isReady) {
-      _isPlayerReady = true;
-    }
+  void _initializeYoutubePlayer() {
+    final videoId = YouTubeHelper.extractVideoId(
+        'https://www.youtube.com/watch?v=xkOOmwk-BWI');
+    if (videoId == null) return;
+
+    _youtubeController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadHtmlString('''
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { 
+              margin: 0; 
+              overflow: hidden;
+              border-radius: 12px;
+            }
+            .video-container {
+              position: relative;
+              padding-bottom: 56.25%;
+              height: 0;
+              overflow: hidden;
+              border-radius: 12px;
+            }
+            .video-container iframe {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              border-radius: 12px;
+              border: none;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="video-container">
+            <iframe 
+              src="https://www.youtube.com/embed/$videoId"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>
+          </div>
+        </body>
+      </html>
+    ''');
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _youtubeController.dispose();
+    _youtubeController?.clearCache();
     super.dispose();
   }
 
@@ -118,9 +154,7 @@ class _AboutScreenState extends State<AboutScreen>
                   Tab(text: 'Pengharapan'),
                   Tab(text: 'Pendeta'),
                   Tab(text: 'Sejarah'),
-                  Tab(
-                    text: 'Cabang',
-                  )
+                  Tab(text: 'Cabang')
                 ],
               ),
               Expanded(
@@ -309,23 +343,17 @@ class _AboutScreenState extends State<AboutScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: YoutubePlayer(
-                    controller: _youtubeController,
-                    showVideoProgressIndicator: true,
-                    progressIndicatorColor: const Color(0xFF132054),
-                    progressColors: const ProgressBarColors(
-                      playedColor: Color(0xFF132054),
-                      handleColor: Color(0xFF132054),
+                if (_youtubeController != null)
+                  Container(
+                    height: 220,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onReady: () {
-                      setState(() {
-                        _isPlayerReady = true;
-                      });
-                    },
+                    child: WebViewWidget(
+                      controller: _youtubeController!,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -511,30 +539,6 @@ class _AboutScreenState extends State<AboutScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildValueSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Value',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Image.asset('assets/images/value1.png'),
-        const SizedBox(height: 12),
-        Image.asset('assets/images/value2.png'),
-        const SizedBox(height: 12),
-        Image.asset('assets/images/value3.png'),
-        const SizedBox(height: 12),
-        Image.asset('assets/images/value4.png'),
-      ],
     );
   }
 

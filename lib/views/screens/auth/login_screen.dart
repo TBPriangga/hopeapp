@@ -182,7 +182,9 @@ class LoginScreen extends StatelessWidget {
                                   ? const SizedBox(
                                       height: 20,
                                       width: 20,
-                                      child: CircularProgressIndicator(),
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
                                     )
                                   : const Text(
                                       'Masuk',

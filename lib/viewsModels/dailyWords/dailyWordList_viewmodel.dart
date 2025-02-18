@@ -9,13 +9,16 @@ class DailyWordListViewModel extends ChangeNotifier {
       : _dailyWordService = dailyWordService;
 
   List<DailyWordModel> _dailyWords = [];
+  List<DailyWordModel> _filteredDailyWords = [];
   bool _isLoading = false;
   String? _error;
   bool _hasMore = true;
   String? _searchQuery;
+  DateTime? _selectedMonth;
 
   // Getters
-  List<DailyWordModel> get dailyWords => _dailyWords;
+  List<DailyWordModel> get dailyWords =>
+      _filteredDailyWords.isEmpty ? _dailyWords : _filteredDailyWords;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get hasMore => _hasMore;
@@ -35,6 +38,11 @@ class DailyWordListViewModel extends ChangeNotifier {
 
       _dailyWords.addAll(newDailyWords);
       _hasMore = newDailyWords.length == limit;
+
+      // Jika ada filter bulan aktif, terapkan kembali
+      if (_selectedMonth != null) {
+        _applyMonthFilter();
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -42,10 +50,32 @@ class DailyWordListViewModel extends ChangeNotifier {
     }
   }
 
+  void filterByMonth(DateTime selectedDate) {
+    _selectedMonth = selectedDate;
+    _applyMonthFilter();
+  }
+
+  void _applyMonthFilter() {
+    if (_selectedMonth == null) {
+      _filteredDailyWords = [];
+      notifyListeners();
+      return;
+    }
+
+    _filteredDailyWords = _dailyWords.where((dailyWord) {
+      return dailyWord.date.year == _selectedMonth!.year &&
+          dailyWord.date.month == _selectedMonth!.month;
+    }).toList();
+
+    notifyListeners();
+  }
+
   Future<void> refresh() async {
     _dailyWords.clear();
+    _filteredDailyWords.clear();
     _hasMore = true;
     _error = null;
+    _selectedMonth = null;
     await loadDailyWords();
   }
 
@@ -61,13 +91,30 @@ class DailyWordListViewModel extends ChangeNotifier {
       _searchQuery = query;
 
       final results = await _dailyWordService.searchDailyWords(query);
-      _dailyWords = results;
+
+      if (_selectedMonth != null) {
+        // Filter hasil pencarian berdasarkan bulan yang dipilih
+        _filteredDailyWords = results.where((dailyWord) {
+          return dailyWord.date.year == _selectedMonth!.year &&
+              dailyWord.date.month == _selectedMonth!.month;
+        }).toList();
+      } else {
+        _dailyWords = results;
+        _filteredDailyWords = [];
+      }
+
       _hasMore = false;
     } catch (e) {
       _error = e.toString();
     } finally {
       _setLoading(false);
     }
+  }
+
+  void clearFilter() {
+    _selectedMonth = null;
+    _filteredDailyWords = [];
+    notifyListeners();
   }
 
   void _setLoading(bool value) {

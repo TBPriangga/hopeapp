@@ -71,13 +71,14 @@ class _BirthdaySectionState extends State<BirthdaySection> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
                 SizedBox(height: 16),
                 Text(
                   'Tidak ada yang berulang tahun minggu ini',
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: Colors.white,
                     fontSize: 14,
                   ),
                 ),
