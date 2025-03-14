@@ -15,6 +15,11 @@ class DailyWordScreen extends StatefulWidget {
 }
 
 class _DailyWordScreenState extends State<DailyWordScreen> {
+  // Kontrol ukuran teks
+  double _textScaleFactor = 1.0;
+  static const double _minTextScale = 0.8;
+  static const double _maxTextScale = 2.0;
+
   @override
   Widget build(BuildContext context) {
     // Get dailyWord from widget or from arguments
@@ -110,7 +115,7 @@ class _DailyWordScreenState extends State<DailyWordScreen> {
                               SelectableText(
                                 dailyWord.content,
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 16 * _textScaleFactor,
                                   height: 1.6,
                                   color: Colors.grey[800],
                                   fontStyle: FontStyle.italic,
@@ -141,21 +146,65 @@ class _DailyWordScreenState extends State<DailyWordScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Row(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(
-                                  Icons.lightbulb_outline,
-                                  color: Color(0xFF132054),
-                                  size: 24,
+                                // Icon dan judul renungan
+                                const Row(
+                                  children: [
+                                    Icon(
+                                      Icons.lightbulb_outline,
+                                      color: Color(0xFF132054),
+                                      size: 24,
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Renungan',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF132054),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(width: 12),
-                                Text(
-                                  'Renungan',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF132054),
-                                  ),
+                                // Kontrol ukuran teks
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove),
+                                      onPressed: () {
+                                        setState(() {
+                                          _textScaleFactor =
+                                              (_textScaleFactor - 0.1).clamp(
+                                                  _minTextScale, _maxTextScale);
+                                        });
+                                      },
+                                      iconSize: 20,
+                                      color: Colors.grey[600],
+                                      tooltip: 'Perkecil teks',
+                                    ),
+                                    Text(
+                                      'Ukuran Teks',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add),
+                                      onPressed: () {
+                                        setState(() {
+                                          _textScaleFactor =
+                                              (_textScaleFactor + 0.1).clamp(
+                                                  _minTextScale, _maxTextScale);
+                                        });
+                                      },
+                                      iconSize: 20,
+                                      color: Colors.grey[600],
+                                      tooltip: 'Perbesar teks',
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -163,7 +212,7 @@ class _DailyWordScreenState extends State<DailyWordScreen> {
                             SelectableText(
                               dailyWord.description,
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 16 * _textScaleFactor,
                                 height: 1.6,
                                 color: Colors.grey[800],
                               ),

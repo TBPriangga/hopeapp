@@ -4,12 +4,13 @@ import 'package:url_launcher/url_launcher.dart';
 class WeddingRegistrationScreen extends StatelessWidget {
   const WeddingRegistrationScreen({super.key});
 
-  Future<void> _launchGoogleForm() async {
-    final Uri url = Uri.parse('https://forms.gle/your-google-form-link');
+  Future<void> _launchWhatsApp() async {
+    final Uri url = Uri.parse(
+        'https://wa.me/+6281339051349?text=Saya%20ingin%20mendaftar%20Pemberkatan%20Nikah');
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
-      throw Exception('Could not launch $url');
+      throw Exception('Could not launch WhatsApp');
     }
   }
 
@@ -116,8 +117,6 @@ class WeddingRegistrationScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Description Section
-
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -148,7 +147,7 @@ class WeddingRegistrationScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _launchGoogleForm,
+                      onPressed: _launchWhatsApp,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF132054),
                         foregroundColor: Colors.white,

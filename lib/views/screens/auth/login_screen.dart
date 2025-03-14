@@ -196,69 +196,6 @@ class LoginScreen extends StatelessWidget {
                             ),
                             SizedBox(height: size.height * 0.03),
 
-                            // Divider
-                            Row(
-                              children: [
-                                Expanded(
-                                    child: Divider(
-                                        color: Colors.white.withOpacity(0.3))),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
-                                  child: Text(
-                                    'atau',
-                                    style: TextStyle(
-                                        color: Colors.white.withOpacity(0.8)),
-                                  ),
-                                ),
-                                Expanded(
-                                    child: Divider(
-                                        color: Colors.white.withOpacity(0.3))),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Google Sign In Button
-                            OutlinedButton.icon(
-                              onPressed: () async {
-                                final result =
-                                    await viewModel.signInWithGoogle();
-                                if (result['success'] && context.mounted) {
-                                  if (result['isNewUser']) {
-                                    Navigator.pushNamed(
-                                      context,
-                                      AppRoutes.completeProfile,
-                                      arguments: result['userData'],
-                                    );
-                                  } else {
-                                    Navigator.pushReplacementNamed(
-                                        context, AppRoutes.home);
-                                  }
-                                }
-                              },
-                              icon: Image.asset(
-                                'assets/icons/google_icon.png',
-                                height: 24,
-                              ),
-                              label: const Text(
-                                'Lanjutkan dengan Google',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                                side: BorderSide(
-                                    color: Colors.white.withOpacity(0.5)),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: size.height * 0.04),
-
                             // Register Link
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,

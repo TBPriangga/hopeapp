@@ -150,6 +150,16 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
     super.dispose();
   }
 
+  List<DailyWordModel> _getFilteredDailyWords(
+      List<DailyWordModel> allDailyWords) {
+    final DateTime today = DateTime.now();
+    final DateTime todayMidnight = DateTime(today.year, today.month, today.day);
+
+    return allDailyWords.where((dailyWord) {
+      return !dailyWord.date.isAfter(todayMidnight);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -242,7 +252,11 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
                       );
                     }
 
-                    if (viewModel.dailyWords.isEmpty && !viewModel.isLoading) {
+                    // Terapkan filter untuk hanya menampilkan renungan hari ini dan yang sudah lewat
+                    final filteredDailyWords =
+                        _getFilteredDailyWords(viewModel.dailyWords);
+
+                    if (filteredDailyWords.isEmpty && !viewModel.isLoading) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -273,10 +287,10 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
                       child: ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: viewModel.dailyWords.length +
+                        itemCount: filteredDailyWords.length +
                             (viewModel.hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
-                          if (index == viewModel.dailyWords.length) {
+                          if (index == filteredDailyWords.length) {
                             return Center(
                               child: Padding(
                                 padding: const EdgeInsets.all(16),
@@ -287,7 +301,7 @@ class _DailyWordListScreenState extends State<DailyWordListScreen> {
                             );
                           }
 
-                          final dailyWord = viewModel.dailyWords[index];
+                          final dailyWord = filteredDailyWords[index];
                           return _buildDailyWordCard(context, dailyWord);
                         },
                       ),

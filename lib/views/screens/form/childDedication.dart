@@ -181,7 +181,11 @@ class ChildDedicationScreen extends StatelessWidget {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.chat_bubble, size: 24),
+                          Icon(
+                            Icons.chat_bubble,
+                            size: 24,
+                            color: Colors.white,
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Daftar Penyerahan Anak',

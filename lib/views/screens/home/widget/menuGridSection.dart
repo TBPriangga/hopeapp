@@ -14,7 +14,7 @@ class MenuGridSection extends StatelessWidget {
           // Sermons Section (Left)
           Expanded(
             flex: 1,
-            child: GestureDetector(
+            child: InkWell(
               onTap: () {
                 Navigator.pushNamed(context, AppRoutes.sermon);
               },
@@ -87,7 +87,7 @@ class MenuGridSection extends StatelessWidget {
             child: Column(
               children: [
                 // Prayer Request
-                GestureDetector(
+                InkWell(
                   onTap: () {
                     Navigator.pushNamed(context, AppRoutes.prayerRequest);
                   },
@@ -153,7 +153,7 @@ class MenuGridSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 // Get Connected - Pemuridan Section
-                GestureDetector(
+                InkWell(
                   onTap: () {
                     Navigator.pushNamed(context, AppRoutes.discipleshipClass);
                   },

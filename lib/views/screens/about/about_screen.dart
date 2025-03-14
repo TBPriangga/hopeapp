@@ -223,7 +223,7 @@ class _AboutScreenState extends State<AboutScreen>
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.asset(
-            'assets/images/value1.jpg',
+            'assets/images/value1.png',
             width: double.infinity,
             fit: BoxFit.fitWidth,
           ),
@@ -232,7 +232,7 @@ class _AboutScreenState extends State<AboutScreen>
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.asset(
-            'assets/images/value2.jpg',
+            'assets/images/value2.png',
             width: double.infinity,
             fit: BoxFit.fitWidth,
           ),
@@ -241,7 +241,7 @@ class _AboutScreenState extends State<AboutScreen>
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.asset(
-            'assets/images/value3.jpg',
+            'assets/images/value3.png',
             width: double.infinity,
             fit: BoxFit.fitWidth,
           ),
@@ -250,7 +250,7 @@ class _AboutScreenState extends State<AboutScreen>
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.asset(
-            'assets/images/value4.jpg',
+            'assets/images/value4.png',
             width: double.infinity,
             fit: BoxFit.fitWidth,
           ),

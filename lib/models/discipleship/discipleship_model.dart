@@ -5,10 +5,8 @@ class DiscipleshipClassModel {
   final String name;
   final String category;
   final String description;
-  final String schedule;
   final String mentor;
   final String classPhotoUrl;
-  final String location;
   final bool isActive;
 
   DiscipleshipClassModel({
@@ -16,10 +14,8 @@ class DiscipleshipClassModel {
     required this.name,
     required this.category,
     required this.description,
-    required this.schedule,
     required this.mentor,
     required this.classPhotoUrl,
-    required this.location,
     this.isActive = true,
   });
 

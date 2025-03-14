@@ -97,6 +97,7 @@ class _BirthdaySectionState extends State<BirthdaySection> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 16),
@@ -131,7 +132,10 @@ class _BirthdaySectionState extends State<BirthdaySection> {
                               width: 60,
                               child: Text(
                                 person.name,
-                                style: const TextStyle(fontSize: 12),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

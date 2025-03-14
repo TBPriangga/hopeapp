@@ -7,7 +7,7 @@ class CounselingScreen extends StatelessWidget {
   Future<void> _launchWhatsApp() async {
     // Ganti dengan nomor WhatsApp pendeta
     final Uri whatsapp = Uri.parse(
-        'https://wa.me/628123456789?text=Shalom%20Pendeta%2C%20saya%20ingin%20konseling');
+        'https://wa.me/6281233415132?text=Shalom%20Pendeta%2C%20saya%20ingin%20konseling');
     if (await canLaunchUrl(whatsapp)) {
       await launchUrl(whatsapp, mode: LaunchMode.externalApplication);
     } else {
