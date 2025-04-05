@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
-
 import '../../../../core/utils/dialog_helper.dart';
 import '../../../../viewsModels/auth/edit_profile_viewmodel.dart';
+import '../../../widgets/customAlertDialog.dart';
 import '../widget/profile_avatar.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -42,7 +42,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     super.didChangeDependencies();
     if (!_isInitialized) {
       _viewModel = Provider.of<EditProfileViewModel>(context, listen: false);
-      _loadData();
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadData();
+      });
+
       _isInitialized = true;
     }
   }
@@ -252,6 +256,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _buildSaveButton(viewModel, context),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Delete Account Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildDeleteAccountButton(viewModel, context),
                 ),
 
                 const SizedBox(height: 30),
@@ -754,6 +766,175 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                   ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Widget untuk tombol hapus akun
+  Widget _buildDeleteAccountButton(
+      EditProfileViewModel viewModel, BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Colors.white,
+        border: Border.all(color: Colors.red[700]!),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(15),
+          onTap: viewModel.isLoading
+              ? null
+              : () => _showDeleteAccountDialog(context),
+          child: Center(
+            child: Text(
+              'Hapus Akun',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.red[700],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Method dialog konfirmasi hapus akun
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: const Text('Hapus Akun'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Apakah Anda yakin ingin menghapus akun? Tindakan ini tidak dapat dibatalkan dan semua data Anda akan dihapus.',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _viewModel.passwordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                hintText: 'Masukkan kata sandi Anda',
+                hintStyle: TextStyle(fontSize: 14, color: Colors.grey[400]),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                prefixIcon: const Icon(Icons.lock_outline),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              _viewModel.passwordController.clear();
+            },
+            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final password = _viewModel.passwordController.text.trim();
+
+              if (password.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Kata sandi diperlukan untuk menghapus akun'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return; // Jangan tutup dialog jika password kosong
+              }
+
+              // Simpan password dan tutup dialog konfirmasi
+              final passwordToUse = password;
+              _viewModel.passwordController.clear();
+              Navigator.of(dialogContext).pop();
+
+              // Tampilkan dialog loading dengan context terpisah
+              BuildContext? loadingContext;
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext ctx) {
+                  loadingContext = ctx;
+                  return const CustomAlertDialog(
+                    title: 'Mohon Tunggu',
+                    message: 'Sedang memproses...',
+                    isLoading: true,
+                  );
+                },
+              );
+
+              try {
+                // Proses penghapusan akun
+                final success = await _viewModel.deleteAccount(passwordToUse);
+
+                // Tutup dialog loading
+                if (loadingContext != null &&
+                    Navigator.canPop(loadingContext!)) {
+                  Navigator.of(loadingContext!).pop();
+                }
+
+                if (success) {
+                  // Navigasi ke login screen jika berhasil
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
+                } else if (context.mounted) {
+                  // Tampilkan error jika gagal tapi tidak throw exception
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          _viewModel.errorMessage ?? 'Gagal menghapus akun'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } catch (e) {
+                // Pastikan dialog loading ditutup jika terjadi error
+                if (loadingContext != null &&
+                    Navigator.canPop(loadingContext!)) {
+                  Navigator.of(loadingContext!).pop();
+                }
+
+                if (context.mounted) {
+                  // Tampilkan error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          _viewModel.errorMessage ?? 'Gagal menghapus akun'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:flutter_cached_pdfview/flutter_cached_pdfview.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
 import '../../../core/services/offering/offering_service.dart';
 import '../../../models/offering/offering_report.dart';
@@ -10,22 +14,7 @@ class OfferingReportScreen extends StatefulWidget {
   State<OfferingReportScreen> createState() => _OfferingReportScreenState();
 }
 
-class _OfferingReportScreenState extends State<OfferingReportScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
+class _OfferingReportScreenState extends State<OfferingReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,7 +27,7 @@ class _OfferingReportScreenState extends State<OfferingReportScreen>
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Laporan Persembahan',
+          'Laporan Persembahan Bulanan',
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -46,32 +35,14 @@ class _OfferingReportScreenState extends State<OfferingReportScreen>
           ),
         ),
         centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(text: 'Mingguan'),
-            Tab(text: 'Bulanan'),
-            Tab(text: 'Tahunan'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildReportList(ReportType.mingguan),
-          _buildReportList(ReportType.bulanan),
-          _buildReportList(ReportType.tahunan),
-        ],
-      ),
+      body: _buildReportList(),
     );
   }
 
-  Widget _buildReportList(ReportType type) {
+  Widget _buildReportList() {
     return StreamBuilder<List<OfferingReport>>(
-      stream: OfferingReportService().getReportsByType(type),
+      stream: OfferingReportService().getReportsByType(ReportType.bulanan),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -98,7 +69,7 @@ class _OfferingReportScreenState extends State<OfferingReportScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Belum ada laporan ${type.name}',
+                  'Belum ada laporan bulanan',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -128,7 +99,7 @@ class _OfferingReportScreenState extends State<OfferingReportScreen>
         borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
-        onTap: () => _downloadReport(report),
+        onTap: () => _viewPdfReport(context, report),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -160,7 +131,7 @@ class _OfferingReportScreenState extends State<OfferingReportScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      report.reportTypeLabel,
+                      'Laporan Bulanan',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 14,
@@ -170,7 +141,7 @@ class _OfferingReportScreenState extends State<OfferingReportScreen>
                 ),
               ),
               const Icon(
-                Icons.download,
+                Icons.visibility,
                 color: Color(0xFF132054),
               ),
             ],
@@ -180,14 +151,153 @@ class _OfferingReportScreenState extends State<OfferingReportScreen>
     );
   }
 
-  Future<void> _downloadReport(OfferingReport report) async {
+  // Method untuk melihat PDF langsung di app
+  Future<void> _viewPdfReport(
+      BuildContext context, OfferingReport report) async {
     try {
-      await OfferingReportService().downloadReport(report);
+      // Tampilkan loading indicator
+      _showLoadingDialog(context);
+
+      // Buka PDF Viewer dengan URL dari report
+      Navigator.pop(context); // Tutup dialog loading
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PDFViewerScreen(
+            pdfUrl: report.fileUrl,
+            title: report.formattedDate,
+          ),
+        ),
+      );
     } catch (e) {
+      // Tutup dialog loading jika masih ditampilkan
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      // Tampilkan pesan error
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal mengunduh laporan: $e'),
+            content: Text('Gagal membuka laporan: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Dialog(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Memuat PDF...'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Class untuk menampilkan PDF Viewer
+class PDFViewerScreen extends StatelessWidget {
+  final String pdfUrl;
+  final String title;
+
+  const PDFViewerScreen({
+    super.key,
+    required this.pdfUrl,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF132054),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          // Tombol untuk download PDF jika diperlukan
+          IconButton(
+            icon: const Icon(Icons.download, color: Colors.white),
+            onPressed: () => _downloadPdf(context),
+            tooltip: 'Download PDF',
+          ),
+        ],
+      ),
+      body: const PDF().cachedFromUrl(
+        pdfUrl,
+        placeholder: (progress) => Center(
+          child: CircularProgressIndicator(
+            value: progress / 100,
+          ),
+        ),
+        errorWidget: (error) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 48,
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Gagal memuat PDF: $error',
+                style: TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Method untuk download PDF jika user ingin menyimpannya
+  Future<void> _downloadPdf(BuildContext context) async {
+    try {
+      final response = await http.get(Uri.parse(pdfUrl));
+      final dir = await getExternalStorageDirectory();
+      final fileName = 'laporan_${title.replaceAll(' ', '_')}.pdf';
+      final file = File('${dir!.path}/$fileName');
+      await file.writeAsBytes(response.bodyBytes);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF berhasil diunduh ke: ${file.path}'),
+            backgroundColor: const Color(0xFF132054),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengunduh PDF: $e'),
             backgroundColor: Colors.red,
           ),
         );

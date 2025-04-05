@@ -13,13 +13,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: const Color(0xFF132054),
-      leading: IconButton(
-        icon: const Icon(Icons.menu, color: Colors.white),
-        onPressed: onMenuPressed,
-      ),
       title: Image.asset(
-        'assets/logo/hope_logo3.png',
-        height: 140,
+        'assets/logo/hope_logo_old.png',
+        height: 70,
       ),
       centerTitle: true,
       actions: const [

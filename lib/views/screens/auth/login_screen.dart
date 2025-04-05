@@ -53,7 +53,7 @@ class LoginScreen extends StatelessWidget {
                             SizedBox(height: size.height * 0.01),
                             Center(
                               child: Image.asset(
-                                'assets/logo/hope_logo3.png',
+                                'assets/logo/hope_logo_old.png',
                                 height: size.height * 0.20,
                               ),
                             ),
@@ -116,6 +116,7 @@ class LoginScreen extends StatelessWidget {
                               hintText: 'Cth : johndoe@gmail.com',
                               controller: viewModel.emailController,
                               prefixIcon: const Icon(Icons.email_outlined),
+                              keyboardType: TextInputType.emailAddress,
                             ),
                             const SizedBox(height: 16),
                             CustomTextField(
@@ -183,7 +184,7 @@ class LoginScreen extends StatelessWidget {
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
-                                        color: Colors.white,
+                                        color: Color(0xFF132054),
                                       ),
                                     )
                                   : const Text(
@@ -194,7 +195,7 @@ class LoginScreen extends StatelessWidget {
                                       ),
                                     ),
                             ),
-                            SizedBox(height: size.height * 0.03),
+                            const SizedBox(height: 20),
 
                             // Register Link
                             Row(

@@ -57,11 +57,10 @@ class RegisterScreen extends StatelessWidget {
                             // Logo Section
                             Center(
                               child: Image.asset(
-                                'assets/logo/hope_logo.png',
-                                height: size.height * 0.1,
+                                'assets/logo/hope_logo_old.png',
+                                height: size.height * 0.2,
                               ),
                             ),
-                            SizedBox(height: size.height * 0.04),
 
                             // Title Section
                             const Center(

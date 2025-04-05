@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../app/routes/app_routes.dart';
 
@@ -74,6 +75,28 @@ class OfferingInfoScreen extends StatelessWidget {
     );
   }
 
+  // Fungsi untuk menyalin teks ke clipboard dan menampilkan feedback
+  void _copyToClipboard(BuildContext context, String text) {
+    Clipboard.setData(ClipboardData(text: text));
+
+    // Menampilkan SnackBar sebagai feedback bahwa teks telah disalin
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Nomor rekening disalin ke clipboard'),
+        backgroundColor: const Color(0xFF132054),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,7 +143,7 @@ class OfferingInfoScreen extends StatelessWidget {
                       onTap: () => _showQRDialog(
                         context,
                         title: 'Persembahan',
-                        qrAsset: 'assets/images/persembahan.png',
+                        qrAsset: 'assets/images/QRIS PERSEMBAHAN.jpg',
                         description:
                             'Scan QR code ini untuk memberikan persembahan umum',
                       ),
@@ -135,7 +158,7 @@ class OfferingInfoScreen extends StatelessWidget {
                       onTap: () => _showQRDialog(
                         context,
                         title: 'Perpuluhan',
-                        qrAsset: 'assets/images/perpuluhan.png',
+                        qrAsset: 'assets/images/QRIS PERPULUHAN.jpg',
                         description:
                             'Scan QR code ini untuk memberikan perpuluhan',
                       ),
@@ -150,7 +173,7 @@ class OfferingInfoScreen extends StatelessWidget {
                       onTap: () => _showQRDialog(
                         context,
                         title: 'Pembangunan',
-                        qrAsset: 'assets/images/pembangunan.png',
+                        qrAsset: 'assets/images/QRIS PEMBANGUNAN.jpg',
                         description: 'Scan QR code ini untuk dana pembangunan',
                       ),
                     ),
@@ -170,6 +193,7 @@ class OfferingInfoScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               _buildBankAccount(
+                context: context,
                 bankName: 'CIMB Niaga',
                 accountNumber: '706242593300',
                 accountName: 'Gereja Baptis Indonesia Pengharapan Surabaya',
@@ -271,6 +295,7 @@ class OfferingInfoScreen extends StatelessWidget {
   }
 
   Widget _buildBankAccount({
+    required BuildContext context,
     required String bankName,
     required String accountNumber,
     required String accountName,
@@ -327,7 +352,8 @@ class OfferingInfoScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.copy),
-            onPressed: () {},
+            tooltip: 'Salin nomor rekening',
+            onPressed: () => _copyToClipboard(context, accountNumber),
           ),
         ],
       ),

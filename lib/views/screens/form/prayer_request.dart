@@ -4,12 +4,16 @@ import 'package:url_launcher/url_launcher.dart';
 class PrayerRequestScreen extends StatelessWidget {
   const PrayerRequestScreen({super.key});
 
-  Future<void> _launchGoogleForm() async {
-    final Uri url = Uri.parse('https://forms.gle/your-google-form-link');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+  Future<void> _launchWhatsApp() async {
+    // Nomor WhatsApp tim doa (ganti dengan nomor yang sebenarnya)
+    // Format: kode negara tanpa simbol + diikuti dengan nomor tanpa 0 di depan
+    final Uri whatsapp = Uri.parse(
+        'https://wa.me/6281233415132?text=Shalom%2C%20saya%20ingin%20menyampaikan%20permohonan%20doa%20saya%20sebagai%20berikut%3A%0A%0A');
+
+    if (await canLaunchUrl(whatsapp)) {
+      await launchUrl(whatsapp, mode: LaunchMode.externalApplication);
     } else {
-      throw Exception('Could not launch $url');
+      throw Exception('Could not launch WhatsApp');
     }
   }
 
@@ -38,7 +42,7 @@ class PrayerRequestScreen extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                 ),
                 title: const Text(
-                  'Prayer Request',
+                  'Permohonan Doa',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -144,7 +148,7 @@ class PrayerRequestScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'Tim doa kami akan mendoakan setiap permohonan doa Anda. Silakan sampaikan pokok doa Anda melalui formulir yang tersedia.',
+                              'Tim doa kami akan mendoakan setiap permohonan doa Anda. Silakan sampaikan pokok doa Anda melalui WhatsApp kepada tim doa kami.',
                               style: TextStyle(
                                 color: Colors.grey[100],
                                 height: 1.5,
@@ -154,14 +158,15 @@ class PrayerRequestScreen extends StatelessWidget {
 
                             const SizedBox(height: 32),
 
-                            // Prayer Request Button
+                            // WhatsApp Button
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: _launchGoogleForm,
+                                onPressed: _launchWhatsApp,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  foregroundColor: const Color(0xFF132054),
+                                  backgroundColor:
+                                      const Color(0xFF25D366), // Warna WhatsApp
+                                  foregroundColor: Colors.white,
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
@@ -172,10 +177,10 @@ class PrayerRequestScreen extends StatelessWidget {
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.edit_note),
+                                    Icon(Icons.chat_bubble),
                                     SizedBox(width: 8),
                                     Text(
-                                      'Sampaikan Pokok Doa',
+                                      'Sampaikan via WhatsApp',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,

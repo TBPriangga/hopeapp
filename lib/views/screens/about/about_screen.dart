@@ -296,7 +296,7 @@ class _AboutScreenState extends State<AboutScreen>
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Pdm. Christian Bayu Prakoso saat adalah asisten gembala sidang di Gereja Baptis Indonesia Pengharapan Surabaya sejak Tahun 2022. Menikah dengan Ibu Ayu Wahyuningsih dan dikarunia oleh satu orang putra bernama Pramana Bara Prakoso. Mengawali Pendidikan pada program sarjana psikologi (Universitas Brawijaya), Pdm. Bayu melanjutkan Pendidikan Magister teologi di STT Baptis Indonesia yang berada di Kota Semarang.',
+                  'Pdm. Christian Bayu Prakoso adalah asisten gembala sidang di Gereja Baptis Indonesia Pengharapan Surabaya sejak Tahun 2022. Menikah dengan Ibu Ayu Wahyuningsih dan dikarunia satu orang putra bernama Pramana Bara Prakoso. Mengawali Pendidikan pada program sarjana psikologi (Universitas Brawijaya), Pdm. Bayu melanjutkan Pendidikan Magister teologi di STT Baptis Indonesia yang berada di Kota Semarang.',
                   style: TextStyle(
                     fontSize: 14,
                     height: 1.5,

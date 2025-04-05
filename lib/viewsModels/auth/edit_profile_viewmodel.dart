@@ -26,6 +26,7 @@ class EditProfileViewModel with ChangeNotifier {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController birthDateController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   // Getters
   bool get isLoading => _isLoading;
@@ -33,6 +34,30 @@ class EditProfileViewModel with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   UserModel? get userData => _userData;
   File? get selectedImage => _selectedImage;
+
+  // Hapus akun
+  Future<bool> deleteAccount(String password) async {
+    try {
+      _setLoading(true);
+
+      final AuthService authService = AuthService();
+      await authService.deleteAccount(password: password);
+
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      String errorMsg = 'Gagal menghapus akun';
+
+      // Cek apakah error adalah exception dengan pesan kustom
+      if (e is Exception) {
+        errorMsg = e.toString().replaceAll('Exception: ', '');
+      }
+
+      _setError(errorMsg);
+      _setLoading(false);
+      return false;
+    }
+  }
 
   // Memilih foto dari galeri
   Future<void> pickImage() async {
@@ -216,6 +241,7 @@ class EditProfileViewModel with ChangeNotifier {
 
   @override
   void dispose() {
+    passwordController.dispose();
     nameController.dispose();
     emailController.dispose();
     phoneController.dispose();

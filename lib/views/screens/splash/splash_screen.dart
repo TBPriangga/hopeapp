@@ -41,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                'assets/logo/hope_logo.png',
+                'assets/logo/hope_logo_old.png',
                 height: 820,
                 width: 820,
               ),

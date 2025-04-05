@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   final String? label;
   final String hintText;
   final bool isPassword;
@@ -23,13 +23,20 @@ class CustomTextField extends StatelessWidget {
   });
 
   @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  bool _obscureText = true;
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (label != null) ...[
+        if (widget.label != null) ...[
           Text(
-            label!,
+            widget.label!,
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -39,23 +46,37 @@ class CustomTextField extends StatelessWidget {
           const SizedBox(height: 8),
         ],
         TextField(
-          controller: controller,
-          obscureText: isPassword,
-          enabled: enabled,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
+          controller: widget.controller,
+          obscureText: widget.isPassword && _obscureText,
+          enabled: widget.enabled,
+          keyboardType: widget.keyboardType,
+          maxLines: widget.isPassword ? 1 : widget.maxLines,
           style: TextStyle(
             fontSize: 16,
-            color: enabled ? Colors.black : Colors.grey,
+            color: widget.enabled ? Colors.black : Colors.grey,
           ),
           decoration: InputDecoration(
-            hintText: hintText,
+            hintText: widget.hintText,
             hintStyle: TextStyle(
               color: Colors.grey[400],
             ),
-            prefixIcon: prefixIcon, // Tambahkan prefixIcon
+            prefixIcon: widget.prefixIcon,
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey[600],
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                  )
+                : null,
             filled: true,
-            fillColor: enabled ? Colors.white : Colors.grey[100],
+            fillColor: widget.enabled ? Colors.white : Colors.grey[100],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,

@@ -29,7 +29,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan anak berusia di bawah 3 tahun',
       mentor: 'Bu Vero dan Bu Lia',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2F1000346694%20-%20Sutiyani%20dwipras.jpg?alt=media&token=6cb6549c-3daf-47fc-89b0-46116efd1e34',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FBatita.jpeg?alt=media&token=41fa83ff-cc1e-4dc9-93b9-05f0e3f77525',
     ),
     DiscipleshipClassModel(
       id: '2',
@@ -38,7 +38,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan anak berusia 3-5 tahun',
       mentor: 'Bu Puji, Bu Yani, Bu Erna',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FIMG_1941%20-%20maria%20febriyanti.jpeg?alt=media&token=a33c1dbc-f7e2-4e72-a11b-b6c9df35665c',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FIndria.jpg?alt=media&token=3c25feeb-e572-4a6b-97c5-dafa191d4a55',
     ),
     DiscipleshipClassModel(
       id: '3',
@@ -47,7 +47,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan anak berusia 6-7 tahun',
       mentor: 'Sdri. Ebi dan Bu Vitri',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2F20241208_233117%20-%20Ary%20Koes%20Herna%20Ningsih.jpg?alt=media&token=3978ff63-6c53-4393-8cd2-fe5e53c2b9c5',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FPratama%20A.jpeg?alt=media&token=f2af7f7f-5c8d-403e-8888-7e93327d1031',
     ),
     DiscipleshipClassModel(
       id: '4',
@@ -56,7 +56,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan anak berusia 8-9 tahun',
       mentor: 'Bu Ari dan Bu Arwhien',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FWhatsApp%20Image%202024-12-12%20at%2009.05.45.jpeg?alt=media&token=e2681827-4566-413c-b989-27f0b1059f75',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FPratama%20B_Betul.jpeg?alt=media&token=e04a0199-c4e9-4f89-83c9-c128230d2ef8',
     ),
     DiscipleshipClassModel(
       id: '5',
@@ -64,7 +64,8 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       category: 'Anak',
       description: 'Kelas ini beranggotakan anak berusia 10-11 tahun',
       mentor: 'Bu Ira dan Bu Dini',
-      classPhotoUrl: 'https://example.com/photos/mentor1.jpg',
+      classPhotoUrl:
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2Fmadya.jpeg?alt=media&token=31aebf30-fd6b-43f4-bb9a-4f1c9e5f0e13',
     ),
     DiscipleshipClassModel(
       id: '6',
@@ -72,7 +73,8 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       category: 'Remaja-Pemuda',
       description: 'Kelas ini beranggotakan remaja putra dan putri usia SMP',
       mentor: 'Bu Amel',
-      classPhotoUrl: 'https://example.com/photos/mentor2.jpg',
+      classPhotoUrl:
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FGolgota%20Betul.jpeg?alt=media&token=98e43b94-8380-4dff-a35a-e5e83f1bc42e',
     ),
     DiscipleshipClassModel(
       id: '7',
@@ -81,7 +83,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan remaja putra berusia SMA',
       mentor: 'Bp. Feri',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FWhatsApp%20Image%202024-12-15%20at%2019.09.34.jpeg?alt=media&token=70ff2e5a-34d5-4a22-ba97-debd7e15fa7b',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2Fyordan%20dan%20getsemani.jpeg?alt=media&token=a02da843-d866-437d-97f2-87f3429f9e2c',
     ),
     DiscipleshipClassModel(
       id: '8',
@@ -90,7 +92,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan remaja putra berusia SMA',
       mentor: 'Bp. Adhit',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FWhatsApp%20Image%202024-12-15%20at%2019.09.34.jpeg?alt=media&token=70ff2e5a-34d5-4a22-ba97-debd7e15fa7b',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2Fyordan%20dan%20getsemani.jpeg?alt=media&token=a02da843-d866-437d-97f2-87f3429f9e2c',
     ),
     DiscipleshipClassModel(
       id: '9',
@@ -99,7 +101,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan remaja putri usia SMP-SMA',
       mentor: 'Sdri. Vinni',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FWhatsApp%20Image%202024-12-15%20at%2012.33.47.jpeg?alt=media&token=39d3c755-887e-4d05-9b38-9965d416f15d',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2Fyerusalem.jpeg?alt=media&token=cb1d5762-22ef-4204-8fca-b1901503e5e5',
     ),
     DiscipleshipClassModel(
       id: '10',
@@ -108,7 +110,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan pemudi usia kuliah dan bekerja',
       mentor: 'Bu Ayu',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FBC54D1CC-BA16-4F2E-BF81-56A0B8943109%20-%20Ayu%20Wahyuningsih.jpeg?alt=media&token=1da5d2bb-072c-451f-b6cc-452933e47db5',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FBetlehem%20Betul.jpeg?alt=media&token=ef92ea17-678e-4c0b-905d-fa89c78cc0b1',
     ),
     DiscipleshipClassModel(
       id: '11',
@@ -117,7 +119,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan pemuda usia kuliah dan bekerja',
       mentor: 'Bp. Made',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2F2bcbd369-6563-438f-b602-527735f58c84%20-%20Made%20Djati.jpeg?alt=media&token=5f91e0ca-4c92-414c-aa3f-3cf340562850',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2Froma.jpeg?alt=media&token=b23e9f35-7032-49ea-853c-ac725cf443ee',
     ),
     DiscipleshipClassModel(
       id: '12',
@@ -135,7 +137,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan pemudi usia kuliah dan bekerja',
       mentor: 'Bu Grace',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FWhatsApp%20Image%202024-12-12%20at%2009.53.49.jpeg?alt=media&token=3d8ff2c1-62b6-417b-ab7a-cd31a8d2ac1e',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2Fkalvari.jpg?alt=media&token=334f63fe-6ffa-4d47-94b6-f3bbbdbacb5f',
     ),
     DiscipleshipClassModel(
       id: '14',
@@ -145,7 +147,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
           'Kelas ini beranggotakan pemuda, pemudi usia bekerja dan dewasa muda',
       mentor: 'Bp. Ony',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FIMG-20230408-WA0011%20-%20Ony%20Wahyudiantaro.jpg?alt=media&token=0cad4b81-0078-44ea-9d16-b93f1c4742e2',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FEn%20Gedi.jpg?alt=media&token=1b47bbde-5d9a-4f56-b92f-f319af0bc261',
     ),
     DiscipleshipClassModel(
       id: '15',
@@ -155,7 +157,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
           'Kelas ini beranggotakan pria dan wanita dari usia dewasa muda',
       mentor: 'Sdr. Opi',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FIMG-20240623-WA0003%20-%20Tri%20Cahyo%20Novianto.jpg?alt=media&token=10927afa-fbc6-45d5-89a9-89e299f2cdfc',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FIsrael.jpg?alt=media&token=23680019-9fdc-454d-8354-45db1b54b15d',
     ),
     DiscipleshipClassModel(
       id: '16',
@@ -165,7 +167,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
           'Kelas ini beranggotakan pria dan wanita dari usia dewasa muda',
       mentor: 'Bp. Gad Eko',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FIMG-20240623-WA0003%20-%20Tri%20Cahyo%20Novianto.jpg?alt=media&token=10927afa-fbc6-45d5-89a9-89e299f2cdfc',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FHenokh.jpg?alt=media&token=c9821290-05ef-4385-b931-238cb0eaedb3',
     ),
     DiscipleshipClassModel(
       id: '17',
@@ -175,7 +177,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
           'Kelas ini beranggotakan pria dan wanita dari usia dewasa muda',
       mentor: 'Bu Nana',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FScreenshot%20(978)%20-%20Indriana%20Parwitasari.png?alt=media&token=375397c1-f112-417a-90ac-9d88ed085722',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FNoah%20Betul.jpeg?alt=media&token=b9be95c1-3026-484c-8804-2d7d0dc2d118',
     ),
     DiscipleshipClassModel(
       id: '18',
@@ -184,7 +186,8 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description:
           'Kelas ini beranggotakan pria dan wanita dari usia dewasa muda',
       mentor: 'Bu Nine',
-      classPhotoUrl: 'https://example.com/photos/mentor1.jpg',
+      classPhotoUrl:
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FDebora%20Betul.jpeg?alt=media&token=7aa4df0f-66f6-45d4-8da2-e5140126f2c5',
     ),
     DiscipleshipClassModel(
       id: '19',
@@ -193,7 +196,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan pria dari usia dewasa muda ',
       mentor: 'Bp. Ika',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FIMG-20221211-WA0005%20-%20Ary%20Koes%20Herna%20Ningsih.jpg?alt=media&token=d1730dad-ed72-448a-a0df-33cf3f1b3b55',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2Fsamuel.jpg?alt=media&token=586ae476-1e0f-47fa-a020-52bcc0b7dfa0',
     ),
     DiscipleshipClassModel(
       id: '20',
@@ -202,7 +205,8 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description:
           'Kelas ini beranggotakan pria dan wanita dari usia dewasa muda',
       mentor: 'Bp. Budi',
-      classPhotoUrl: 'https://example.com/photos/mentor1.jpg',
+      classPhotoUrl:
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FYesua%20Betul.jpeg?alt=media&token=d1dc4b61-964c-4263-9278-ac0a35a9542f',
     ),
     DiscipleshipClassModel(
       id: '21',
@@ -210,7 +214,8 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       category: 'Dewasa Muda',
       description: 'Kelas ini beranggotakan wanita dari usia dewasa muda ',
       mentor: 'Bu Lita',
-      classPhotoUrl: 'https://example.com/photos/mentor1.jpg',
+      classPhotoUrl:
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FEl%20Shadai.jpeg?alt=media&token=4d34b9df-f60c-424b-a5b5-64973bf01a7b',
     ),
     DiscipleshipClassModel(
       id: '22',
@@ -219,7 +224,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan wanita dari usia dewasa senior',
       mentor: 'Bu Indah Suparman',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FWhatsApp%20Image%202024-12-14%20at%2005.43.09.jpeg?alt=media&token=0016535e-83ef-4012-8b95-4a511e6629dd',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2Fkasih.jpeg?alt=media&token=c23e2f77-9b44-4c9b-bd92-bdd05775f83a',
     ),
     DiscipleshipClassModel(
       id: '23',
@@ -228,7 +233,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan wanita dari usia dewasa senior',
       mentor: 'Bu Sutiyah & Bu Dewi',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FWhatsApp%20Image%202024-12-12%20at%2008.44.50.jpeg?alt=media&token=83ce1ac5-a6a1-45c5-86cb-822714810d8f',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2Fsukacita.jpeg?alt=media&token=2c079ef9-da5c-4ccf-b87a-e6cb05538e2d',
     ),
     DiscipleshipClassModel(
       id: '24',
@@ -237,7 +242,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan pria dari usia dewasa senior',
       mentor: 'Bp. Edi',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FWhatsApp%20Image%202024-12-12%20at%2010.02.22.jpeg?alt=media&token=a1821519-634e-4920-aab7-c995fc25020e',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FSetia%20Betul%20B.jpeg?alt=media&token=c931fe1b-2c7d-420f-91da-32246ff2347e',
     ),
     DiscipleshipClassModel(
       id: '25',
@@ -246,7 +251,7 @@ class _DiscipleshipClassScreenState extends State<DiscipleshipClassScreen> {
       description: 'Kelas ini beranggotakan pria dari usia dewasa senior',
       mentor: 'Bp. Edi',
       classPhotoUrl:
-          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2FWhatsApp%20Image%202024-12-12%20at%2010.02.22.jpeg?alt=media&token=a1821519-634e-4920-aab7-c995fc25020e',
+          'https://firebasestorage.googleapis.com/v0/b/hopeapp-513f1.firebasestorage.app/o/image_class%2Fclassupdate%2FSetia%20Betul%20B.jpeg?alt=media&token=c931fe1b-2c7d-420f-91da-32246ff2347e',
     ),
   ];
 
