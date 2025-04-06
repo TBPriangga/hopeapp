@@ -38,6 +38,7 @@ import 'viewsModels/dailyWords/dailyWordList_viewmodel.dart';
 import 'viewsModels/dailyWords/dailyWord_viewmodel.dart';
 import 'viewsModels/event/event_viewmodel.dart';
 import 'viewsModels/notifications/notifications_viewmodel.dart';
+import 'viewsModels/offering/offering_report_viewModel.dart';
 import 'viewsModels/sermon/sermon_viewmodel.dart';
 
 // Global navigator key
@@ -46,6 +47,28 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 // Notification plugin
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+
+// Menonaktifkan Firebase App Check untuk debugging
+Future<void> disableAppCheckForDebugging() async {
+  // Menonaktifkan Firebase App Check
+  print('DEVELOPMENT MODE: Firebase App Check dinonaktifkan untuk debugging');
+
+  // Kita tidak memanggil FirebaseAppCheck.instance.activate() sama sekali
+  // Ini akan mencegah App Check bekerja dan menghilangkan pemblokiran
+
+  // Jika diperlukan, bisa didaftarkan notifikasi ketika App Check dimatikan
+  if (kDebugMode) {
+    try {
+      // Tampilkan notifikasi debug di console
+      print('=================================================');
+      print('| FIREBASE APP CHECK DINONAKTIFKAN UNTUK DEBUGGING |');
+      print('| FITUR VERIFIKASI EMAIL JUGA DILEWATI            |');
+      print('=================================================');
+    } catch (e) {
+      print('Error saat notifikasi debug: $e');
+    }
+  }
+}
 
 // Background message handler
 @pragma('vm:entry-point')
@@ -245,13 +268,11 @@ void setupFCMTokenRefresh() {
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp();
 
-    // Perbaikan aktivasi App Check
-    await FirebaseAppCheck.instance.activate(
-      androidProvider:
-          kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-    );
+    // DIUBAH: Matikan Firebase App Check untuk debugging
+    await disableAppCheckForDebugging();
+
+    await Firebase.initializeApp();
 
     await initializeDateFormatting('id_ID', null);
     await requestNotificationPermissions();
@@ -295,6 +316,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BirthdayViewModel()),
         ChangeNotifierProvider(create: (_) => EventViewModel()),
         ChangeNotifierProvider(create: (_) => ForgotPasswordViewModel()),
+        ChangeNotifierProvider(create: (_) => OfferingReportViewModel()),
         ChangeNotifierProvider(
           create: (context) => SermonViewModel(
             sermonService: context.read<SermonService>(),

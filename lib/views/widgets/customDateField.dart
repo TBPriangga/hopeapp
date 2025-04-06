@@ -1,4 +1,3 @@
-// widgets/customDateField.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -53,52 +52,68 @@ class CustomDateField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      readOnly: true,
-      enabled: enabled,
-      onTap: enabled ? () => _selectDate(context) : null,
-      decoration: InputDecoration(
-        hintText: hintText ?? 'Pilih tanggal lahir',
-        hintStyle: TextStyle(
-          color: Colors.grey[400],
-        ),
-        filled: true,
-        fillColor: enabled ? Colors.white : Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-        suffixIcon: Icon(
-          Icons.calendar_today,
-          color: enabled ? const Color(0xFF3949AB) : Colors.grey,
-          size: 20,
-        ),
-        errorText: errorText,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: Color(0xFF3949AB),
-            width: 1,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (label != null) ...[
+          Text(
+            label!,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        TextFormField(
+          controller: controller,
+          readOnly: true,
+          enabled: enabled,
+          onTap: enabled ? () => _selectDate(context) : null,
+          style: TextStyle(
+            fontSize: 16,
+            color: enabled ? Colors.black : Colors.grey,
+          ),
+          decoration: InputDecoration(
+            hintText: hintText ?? 'Pilih tanggal lahir',
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+            ),
+            filled: true,
+            fillColor: enabled ? Colors.white : Colors.grey[100],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            suffixIcon: Icon(
+              Icons.calendar_today,
+              color: enabled ? const Color(0xFF3949AB) : Colors.grey,
+              size: 20,
+            ),
+            errorText: errorText,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF3949AB),
+                width: 1,
+              ),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
           ),
         ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      style: TextStyle(
-        fontSize: 16,
-        color: enabled ? Colors.black : Colors.grey,
-      ),
+      ],
     );
   }
 }

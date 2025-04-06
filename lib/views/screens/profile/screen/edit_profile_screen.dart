@@ -62,6 +62,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     _viewModel.phoneController.addListener(_onFieldChanged);
     _viewModel.addressController.addListener(_onFieldChanged);
     _viewModel.birthDateController.addListener(_onFieldChanged);
+    _viewModel.originChurchController.addListener(_onFieldChanged);
   }
 
   void _onFieldChanged() {
@@ -84,6 +85,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     }
     if (_viewModel.birthDateController.hasListeners) {
       _viewModel.birthDateController.removeListener(_onFieldChanged);
+    }
+    if (_viewModel.originChurchController.hasListeners) {
+      _viewModel.originChurchController.removeListener(_onFieldChanged);
     }
     super.dispose();
   }
@@ -248,6 +252,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                       ),
                     ),
                   ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // Baptism and Church Membership Card
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildChurchMembershipCard(viewModel, context),
                 ),
 
                 const SizedBox(height: 30),
@@ -579,6 +591,185 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     );
   }
 
+  Widget _buildChurchMembershipCard(
+      EditProfileViewModel viewModel, BuildContext context) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Section Title
+            const Row(
+              children: [
+                Icon(Icons.church, color: Color(0xFF3949AB)),
+                SizedBox(width: 8),
+                Text(
+                  'Informasi Keanggotaan',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF3949AB),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 30),
+
+            // Status Baptis
+            const Text(
+              'Status Baptis',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSelectionButton(
+                    text: 'Sudah Dibaptis',
+                    isSelected: viewModel.isBaptized,
+                    onTap: () {
+                      viewModel.setBaptismStatus(true);
+                      setState(() => _hasChanges = true);
+                    },
+                    icon: Icons.check_circle_outline,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildSelectionButton(
+                    text: 'Belum Dibaptis',
+                    isSelected: !viewModel.isBaptized,
+                    onTap: () {
+                      viewModel.setBaptismStatus(false);
+                      setState(() => _hasChanges = true);
+                    },
+                    icon: Icons.cancel_outlined,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Status Keanggotaan
+            const Text(
+              'Status Keanggotaan',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSelectionButton(
+                    text: 'Anggota Jemaat',
+                    isSelected: viewModel.isChurchMember,
+                    onTap: () {
+                      viewModel.setMembershipStatus(true);
+                      setState(() => _hasChanges = true);
+                    },
+                    icon: Icons.people,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildSelectionButton(
+                    text: 'Partisipan',
+                    isSelected: !viewModel.isChurchMember,
+                    onTap: () {
+                      viewModel.setMembershipStatus(false);
+                      setState(() => _hasChanges = true);
+                    },
+                    icon: Icons.person_outline,
+                  ),
+                ),
+              ],
+            ),
+
+            // Asal Gereja (jika partisipan)
+            if (!viewModel.isChurchMember) ...[
+              const SizedBox(height: 20),
+              _buildFormField(
+                label: 'Asal Gereja',
+                controller: viewModel.originChurchController,
+                hintText: 'Masukkan asal gereja anda',
+                icon: Icons.church_outlined,
+                onChanged: (value) {
+                  viewModel.setOriginChurch(value);
+                  setState(() => _hasChanges = true);
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectionButton({
+    required String text,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required IconData icon,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF3949AB) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF3949AB) : Colors.grey[300]!,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF3949AB).withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? Colors.white : Colors.grey[600],
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey[700],
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFormField({
     required String label,
     required TextEditingController controller,
@@ -588,6 +779,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     bool readOnly = false,
     bool enabled = true,
     VoidCallback? onTap,
+    Function(String)? onChanged,
     Widget? suffixIcon,
     int maxLines = 1,
   }) {
@@ -609,6 +801,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           readOnly: readOnly,
           enabled: enabled,
           onTap: onTap,
+          onChanged: onChanged,
           maxLines: maxLines,
           decoration: InputDecoration(
             hintText: hintText,

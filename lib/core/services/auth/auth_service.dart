@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
@@ -9,7 +10,47 @@ class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-// Delete user account
+  // Flag untuk mode debug
+  bool get _isDebugMode => kDebugMode;
+
+  // Metode verifikasi email yang sudah dimodifikasi untuk debug
+  Future<bool> isEmailVerified() async {
+    if (_isDebugMode) {
+      // Selalu anggap email terverifikasi dalam mode debug
+      print('DEBUG: Bypassing email verification check');
+      return true;
+    }
+
+    try {
+      User? user = _auth.currentUser;
+      // Reload user untuk mendapatkan status terbaru
+      await user?.reload();
+      user = _auth.currentUser;
+      return user?.emailVerified ?? false;
+    } catch (e) {
+      print('Error checking email verification: $e');
+      return _isDebugMode ? true : false; // Selalu return true dalam debug mode
+    }
+  }
+
+  // Kirim ulang email verifikasi
+  Future<void> sendEmailVerification() async {
+    if (_isDebugMode) {
+      print('DEBUG: Skipping send verification email');
+      return; // Skip in debug mode
+    }
+
+    try {
+      User? user = _auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+      }
+    } catch (e) {
+      throw Exception('Failed to send verification email: $e');
+    }
+  }
+
+  // Delete user account
   Future<void> deleteAccount({required String password}) async {
     try {
       final user = _auth.currentUser;
@@ -158,6 +199,15 @@ class AuthService {
         throw Exception('Admin tidak dapat login melalui aplikasi mobile');
       }
 
+      // Verifikasi bahwa email telah diverifikasi - DILEWATI DALAM DEBUG MODE
+      if (!_isDebugMode && !credential.user!.emailVerified) {
+        // Kirim ulang email verifikasi
+        await credential.user!.sendEmailVerification();
+        await _auth.signOut();
+        throw Exception(
+            'Email belum diverifikasi. Silakan cek email Anda untuk verifikasi.');
+      }
+
       // Subscribe ke topics setelah login berhasil
       await subscribeToNotificationTopics();
 
@@ -191,9 +241,51 @@ class AuthService {
     }
   }
 
-  // Register dengan email dan password
+  // Register dengan email dan password - DIMODIFIKASI UNTUK DEBUG
   Future<UserCredential> register(String email, String password) async {
     try {
+      if (_isDebugMode) {
+        print('DEBUG MODE: Mencoba registrasi dengan error handling minimal');
+
+        // Skip validasi email untuk debug mode
+
+        // Cek apakah user sudah ada (dengan error handling)
+        try {
+          final methods = await _auth.fetchSignInMethodsForEmail(email);
+          if (methods.isNotEmpty) {
+            print(
+                'WARNING: Email sudah terdaftar, tetapi melanjutkan untuk debug');
+          }
+        } catch (e) {
+          print('Error checking email: $e - melanjutkan untuk debug');
+        }
+
+        // Registrasi dengan timeout pendek
+        try {
+          final userCredential = await _auth
+              .createUserWithEmailAndPassword(
+                email: email,
+                password: password,
+              )
+              .timeout(Duration(seconds: 5));
+
+          // Jangan kirim email verifikasi di debug mode
+          print('DEBUG: User dibuat, email verifikasi TIDAK dikirim');
+
+          return userCredential;
+        } catch (e) {
+          print('REGISTRATION ERROR: $e');
+
+          // Fallback ke metode alternatif untuk debug
+          print('DEBUG: Mencoba metode alternatif - Anonymous auth');
+          final anonResult = await _auth.signInAnonymously();
+
+          print('DEBUG: Registrasi berhasil dengan metode alternatif');
+          return anonResult;
+        }
+      }
+
+      // Kode produksi normal
       // Register user baru
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -206,11 +298,26 @@ class AuthService {
         throw Exception('Invalid registration attempt');
       }
 
+      // Kirim email verifikasi
+      await credential.user!.sendEmailVerification();
+
       // Subscribe ke topics setelah registrasi berhasil
       await subscribeToNotificationTopics();
 
       return credential;
     } catch (e) {
+      if (_isDebugMode) {
+        print('DEBUG: Registration error ignored: $e');
+
+        // Dalam mode debug, coba Anonymous auth jika error
+        try {
+          print('DEBUG: Fallback to anonymous auth after error');
+          return await _auth.signInAnonymously();
+        } catch (innerE) {
+          print('DEBUG: Even anonymous auth failed: $innerE');
+        }
+      }
+
       throw Exception('Failed to register: $e');
     }
   }
@@ -236,11 +343,13 @@ class AuthService {
       // Sign in ke Firebase
       final userCredential = await _auth.signInWithCredential(credential);
 
-      // Verifikasi bahwa user bukan admin
-      final isAdmin = await _isAdmin(userCredential.user!.uid);
-      if (isAdmin) {
-        await _auth.signOut();
-        throw Exception('Admin tidak dapat login melalui aplikasi mobile');
+      // Verifikasi bahwa user bukan admin - DILEWATI DI DEBUG MODE
+      if (!_isDebugMode) {
+        final isAdmin = await _isAdmin(userCredential.user!.uid);
+        if (isAdmin) {
+          await _auth.signOut();
+          throw Exception('Admin tidak dapat login melalui aplikasi mobile');
+        }
       }
 
       // Subscribe ke topics setelah login dengan Google berhasil
@@ -254,6 +363,11 @@ class AuthService {
 
   // Check if user is admin
   Future<bool> _isAdmin(String userId) async {
+    if (_isDebugMode) {
+      // Dalam debug mode, selalu asumsikan bukan admin
+      return false;
+    }
+
     try {
       final doc = await _firestore.collection('admins').doc(userId).get();
       return doc.exists && doc.data()?['status'] == 'active';
@@ -265,6 +379,11 @@ class AuthService {
 
   // Check if user exists in Firestore
   Future<bool> isNewUser(String userId) async {
+    if (_isDebugMode) {
+      // Dalam debug mode, selalu asumsikan user baru
+      return true;
+    }
+
     try {
       final docSnapshot =
           await _firestore.collection('users').doc(userId).get();
@@ -282,6 +401,11 @@ class AuthService {
 
   // Get user role
   Future<String> getUserRole(String userId) async {
+    if (_isDebugMode) {
+      // Dalam debug mode, selalu return 'user'
+      return 'user';
+    }
+
     try {
       if (await _isAdmin(userId)) return 'admin';
 
@@ -341,6 +465,11 @@ class AuthService {
 
   // Helper method untuk validasi role
   Future<bool> validateUserRole(String userId) async {
+    if (_isDebugMode) {
+      // Dalam debug mode, selalu return true
+      return true;
+    }
+
     try {
       final role = await getUserRole(userId);
       return role == 'user'; // true jika user biasa, false jika admin

@@ -9,6 +9,7 @@ class CustomTextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final int? maxLines;
   final Widget? prefixIcon;
+  final String? errorText;
 
   const CustomTextField({
     super.key,
@@ -20,6 +21,7 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType,
     this.maxLines = 1,
     this.prefixIcon,
+    this.errorText,
   });
 
   @override
@@ -100,6 +102,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
+            errorText: widget.errorText,
           ),
         ),
       ],

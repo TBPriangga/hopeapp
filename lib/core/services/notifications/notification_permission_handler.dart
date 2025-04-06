@@ -1,5 +1,3 @@
-// Path: lib/core/services/notifications/notification_permission_handler.dart
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';

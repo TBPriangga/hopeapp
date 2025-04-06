@@ -20,6 +20,11 @@ class EditProfileViewModel with ChangeNotifier {
   File? _selectedImage;
   DateTime? _selectedDate;
 
+  // Status baptis dan keanggotaan
+  bool _isBaptized = false;
+  bool _isChurchMember = true;
+  String _originChurch = '';
+
   // Controllers
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -27,6 +32,7 @@ class EditProfileViewModel with ChangeNotifier {
   final TextEditingController birthDateController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController originChurchController = TextEditingController();
 
   // Getters
   bool get isLoading => _isLoading;
@@ -34,6 +40,29 @@ class EditProfileViewModel with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   UserModel? get userData => _userData;
   File? get selectedImage => _selectedImage;
+  bool get isBaptized => _isBaptized;
+  bool get isChurchMember => _isChurchMember;
+  String get originChurch => _originChurch;
+
+  // Setters untuk status baptis dan keanggotaan
+  void setBaptismStatus(bool value) {
+    _isBaptized = value;
+    notifyListeners();
+  }
+
+  void setMembershipStatus(bool value) {
+    _isChurchMember = value;
+    if (value) {
+      _originChurch = ''; // Reset gereja asal jika menjadi anggota
+      originChurchController.clear();
+    }
+    notifyListeners();
+  }
+
+  void setOriginChurch(String value) {
+    _originChurch = value;
+    notifyListeners();
+  }
 
   // Hapus akun
   Future<bool> deleteAccount(String password) async {
@@ -135,7 +164,7 @@ class EditProfileViewModel with ChangeNotifier {
       notifyListeners();
 
       final String fileName =
-          'profile_${DateTime.now().millisecondsSinceEpoch}${_selectedImage!.path.split('.').last}';
+          'profile_${DateTime.now().millisecondsSinceEpoch}.${_selectedImage!.path.split('.').last}';
       final Reference ref = _storage
           .ref()
           .child('profile_images')
@@ -168,6 +197,12 @@ class EditProfileViewModel with ChangeNotifier {
         if (userData != null) {
           _userData = userData;
           _initializeControllers();
+
+          // Inisialisasi status baptisan dan keanggotaan
+          _isBaptized = userData.isBaptized;
+          _isChurchMember = userData.isChurchMember;
+          _originChurch = userData.originChurch;
+          originChurchController.text = userData.originChurch;
         }
       }
     } catch (e) {
@@ -216,6 +251,9 @@ class EditProfileViewModel with ChangeNotifier {
         photoUrl: photoUrl,
         role: _userData!.role,
         updatedAt: DateTime.now(),
+        isBaptized: _isBaptized,
+        isChurchMember: _isChurchMember,
+        originChurch: _isChurchMember ? '' : _originChurch,
       );
 
       await _firestoreService.saveUserData(updatedUser);
@@ -247,6 +285,7 @@ class EditProfileViewModel with ChangeNotifier {
     phoneController.dispose();
     birthDateController.dispose();
     addressController.dispose();
+    originChurchController.dispose();
     super.dispose();
   }
 }

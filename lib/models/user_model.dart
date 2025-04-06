@@ -15,6 +15,9 @@ class UserModel {
   final String role;
   final int? birthMonth; // 1-12
   final int? birthDay; // 1-31
+  final bool isBaptized; // Status baptis
+  final bool isChurchMember; // Status keanggotaan
+  final String originChurch; // Asal gereja jika partisipan
 
   UserModel({
     required this.id,
@@ -30,6 +33,9 @@ class UserModel {
     this.role = 'user',
     this.birthMonth,
     this.birthDay,
+    this.isBaptized = false,
+    this.isChurchMember = true,
+    this.originChurch = '',
   });
 
   factory UserModel.fromMap(String id, Map<String, dynamic> map) {
@@ -52,6 +58,9 @@ class UserModel {
       role: map['role'] ?? 'user',
       birthMonth: birthDate?.month,
       birthDay: birthDate?.day,
+      isBaptized: map['isBaptized'] ?? false,
+      isChurchMember: map['isChurchMember'] ?? true,
+      originChurch: map['originChurch'] ?? '',
     );
   }
 
@@ -71,6 +80,9 @@ class UserModel {
       'updatedAt': FieldValue.serverTimestamp(),
       'birthMonth': birthDate?.month,
       'birthDay': birthDate?.day,
+      'isBaptized': isBaptized,
+      'isChurchMember': isChurchMember,
+      'originChurch': originChurch,
     };
   }
 
@@ -84,6 +96,9 @@ class UserModel {
     String? photoUrl,
     String? role,
     DateTime? updatedAt,
+    bool? isBaptized,
+    bool? isChurchMember,
+    String? originChurch,
   }) {
     return UserModel(
       id: id,
@@ -98,6 +113,9 @@ class UserModel {
       role: role ?? this.role,
       birthMonth: birthDate?.month ?? this.birthMonth,
       birthDay: birthDate?.day ?? this.birthDay,
+      isBaptized: isBaptized ?? this.isBaptized,
+      isChurchMember: isChurchMember ?? this.isChurchMember,
+      originChurch: originChurch ?? this.originChurch,
     );
   }
 
@@ -130,7 +148,10 @@ class UserModel {
         other.birthDate == birthDate &&
         other.phoneNumber == phoneNumber &&
         other.photoUrl == photoUrl &&
-        other.role == role;
+        other.role == role &&
+        other.isBaptized == isBaptized &&
+        other.isChurchMember == isChurchMember &&
+        other.originChurch == originChurch;
   }
 
   @override
@@ -142,11 +163,14 @@ class UserModel {
         birthDate.hashCode ^
         phoneNumber.hashCode ^
         photoUrl.hashCode ^
-        role.hashCode;
+        role.hashCode ^
+        isBaptized.hashCode ^
+        isChurchMember.hashCode ^
+        originChurch.hashCode;
   }
 
   @override
   String toString() {
-    return 'UserModel(id: $id, name: $name, email: $email, role: $role)';
+    return 'UserModel(id: $id, name: $name, email: $email, role: $role, isBaptized: $isBaptized, isChurchMember: $isChurchMember)';
   }
 }
