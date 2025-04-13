@@ -4,11 +4,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
   // Flag untuk mode debug
   bool get _isDebugMode => kDebugMode;
@@ -23,13 +25,30 @@ class AuthService {
 
     try {
       User? user = _auth.currentUser;
+      if (user == null) return false;
+
       // Reload user untuk mendapatkan status terbaru
-      await user?.reload();
+      await user.reload();
       user = _auth.currentUser;
-      return user?.emailVerified ?? false;
+
+      // Ambil status verifikasi yang terbaru
+      final bool isVerified = user?.emailVerified ?? false;
+
+      return isVerified;
     } catch (e) {
       print('Error checking email verification: $e');
-      return _isDebugMode ? true : false; // Selalu return true dalam debug mode
+      return false; // Selalu return false pada production jika error
+    }
+  }
+
+  // Metode untuk memeriksa ketersediaan email
+  Future<bool> isEmailAvailable(String email) async {
+    try {
+      final methods = await _auth.fetchSignInMethodsForEmail(email);
+      return methods.isEmpty; // Email tersedia jika tidak ada metode sign-in
+    } catch (e) {
+      print('Error checking email availability: $e');
+      return false; // Asumsikan tidak tersedia dalam kasus error
     }
   }
 
@@ -130,6 +149,49 @@ class AuthService {
     } catch (e) {
       print('Error deleting account: $e');
       throw e; // Lemparkan error untuk ditangani di ViewModel
+    }
+  }
+
+  // Hapus akun yang belum terverifikasi
+  Future<bool> deleteUnverifiedUser(User user) async {
+    try {
+      print('Attempting to delete unverified user: ${user.email}');
+
+      // Reload user untuk memastikan status terbaru
+      await user.reload();
+
+      // Check if the user is still not verified
+      if (!user.emailVerified) {
+        // Delete user account
+        await user.delete();
+        print('Successfully deleted unverified user: ${user.email}');
+        return true;
+      } else {
+        print('User is already verified, cannot delete: ${user.email}');
+        return false;
+      }
+    } catch (e) {
+      print('Error deleting unverified user: $e');
+
+      // Check if error indicates user is already deleted or signed out
+      if (e is FirebaseAuthException) {
+        if (e.code == 'user-not-found' ||
+            e.code == 'user-token-expired' ||
+            e.code == 'no-current-user' ||
+            e.code == 'requires-recent-login') {
+          print('User seems to be already deleted or signed out');
+          return true;
+        }
+      }
+
+      // Try to sign out in case of errors
+      try {
+        await _auth.signOut();
+      } catch (signOutError) {
+        print('Error signing out: $signOutError');
+      }
+
+      return false;
     }
   }
 
@@ -241,24 +303,20 @@ class AuthService {
     }
   }
 
-  // Register dengan email dan password - DIMODIFIKASI UNTUK DEBUG
+  // Register dengan email dan password - DIMODIFIKASI
   Future<UserCredential> register(String email, String password) async {
     try {
+      // Periksa ketersediaan email terlebih dahulu
+      final isAvailable = await isEmailAvailable(email);
+      if (!isAvailable) {
+        throw FirebaseAuthException(
+            code: 'email-already-in-use',
+            message:
+                'Email sudah terdaftar. Silakan gunakan email lain atau login.');
+      }
+
       if (_isDebugMode) {
-        print('DEBUG MODE: Mencoba registrasi dengan error handling minimal');
-
-        // Skip validasi email untuk debug mode
-
-        // Cek apakah user sudah ada (dengan error handling)
-        try {
-          final methods = await _auth.fetchSignInMethodsForEmail(email);
-          if (methods.isNotEmpty) {
-            print(
-                'WARNING: Email sudah terdaftar, tetapi melanjutkan untuk debug');
-          }
-        } catch (e) {
-          print('Error checking email: $e - melanjutkan untuk debug');
-        }
+        print('DEBUG MODE: Registrasi dengan error handling minimal');
 
         // Registrasi dengan timeout pendek
         try {
@@ -267,10 +325,14 @@ class AuthService {
                 email: email,
                 password: password,
               )
-              .timeout(Duration(seconds: 5));
+              .timeout(const Duration(seconds: 5));
 
-          // Jangan kirim email verifikasi di debug mode
-          print('DEBUG: User dibuat, email verifikasi TIDAK dikirim');
+          // Anggap email sudah terverifikasi dalam debug mode
+          if (userCredential.user != null) {
+            await userCredential.user!.updateEmailVerified(true);
+          }
+
+          print('DEBUG: User dibuat, email diatur sebagai terverifikasi');
 
           return userCredential;
         } catch (e) {
@@ -298,11 +360,10 @@ class AuthService {
         throw Exception('Invalid registration attempt');
       }
 
-      // Kirim email verifikasi
-      await credential.user!.sendEmailVerification();
-
-      // Subscribe ke topics setelah registrasi berhasil
-      await subscribeToNotificationTopics();
+      // Kirim email verifikasi dalam mode produksi
+      if (credential.user != null) {
+        await credential.user!.sendEmailVerification();
+      }
 
       return credential;
     } catch (e) {
@@ -417,30 +478,75 @@ class AuthService {
     }
   }
 
-  // Logout
-  Future<void> logout() async {
+  // Improved Logout method
+  Future<void> logout({bool clearAll = true}) async {
     try {
       print('Starting logout process...');
 
-      // Check current user's provider data
+      // Periksa koneksi internet
+      final connectivityResult = await Connectivity().checkConnectivity();
+      final bool hasInternet = connectivityResult != ConnectivityResult.none;
+
+      // Ambil user saat ini dan fcmToken sebelum logout
       final user = _auth.currentUser;
+      String? fcmToken;
+
       if (user != null) {
-        final isGoogleUser = user.providerData
-            .any((userInfo) => userInfo.providerId == 'google.com');
+        try {
+          // 1. Ambil FCM token saat ini untuk dihapus dari database
+          if (hasInternet) {
+            fcmToken = await _messaging.getToken();
 
-        // If user is signed in with Google, sign out from Google
-        if (isGoogleUser) {
-          print('Signing out from Google...');
-          await _googleSignIn.signOut();
+            // 2. Hapus FCM token dari database user
+            if (fcmToken != null) {
+              await _firestore
+                  .collection('users')
+                  .doc(user.uid)
+                  .update({'fcmToken': FieldValue.delete()});
+              print('FCM token removed from database');
+            }
+          }
+
+          // 3. Lepaskan dari semua topik notifikasi
+          if (hasInternet) {
+            print('Unsubscribing from notification topics...');
+            await unsubscribeFromNotificationTopics();
+          }
+
+          // 4. Handle logout berdasarkan provider
+          final isGoogleUser = user.providerData
+              .any((userInfo) => userInfo.providerId == 'google.com');
+
+          if (isGoogleUser && hasInternet) {
+            print('Signing out from Google...');
+            await _googleSignIn.signOut();
+          }
+
+          // 5. Bersihkan local preferences jika diperlukan
+          if (clearAll) {
+            // Implementasi pembersihan shared preferences atau penyimpanan lokal lainnya
+            print('Clearing local storage...');
+            // await _clearLocalStorage(); // Uncomment dan implementasikan jika diperlukan
+          }
+        } catch (e) {
+          print('Warning: Error during pre-logout cleanup: $e');
+          // Lanjutkan proses logout meskipun ada error dalam pembersihan
         }
-
-        // Unsubscribe from topics
-        print('Unsubscribing from notification topics...');
-        await unsubscribeFromNotificationTopics();
       }
 
+      // 6. Logout dari Firebase Auth
       print('Signing out from Firebase...');
       await _auth.signOut();
+
+      // 7. Hapus FCM token device (opsional)
+      if (hasInternet) {
+        try {
+          await _messaging.deleteToken();
+          print('FCM token deleted from device');
+        } catch (e) {
+          print('Warning: Error deleting FCM token: $e');
+        }
+      }
 
       print('Logout successful');
     } catch (e) {
@@ -477,5 +583,20 @@ class AuthService {
       print('Error validating user role: $e');
       return false;
     }
+  }
+
+  // Periksa status koneksi internet
+  Future<bool> checkInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
+  }
+}
+
+// Extension untuk debugging - Simulasi email terverifikasi
+extension FirebaseUserExtension on User {
+  Future<void> updateEmailVerified(bool value) async {
+    // Metode ini hanya untuk simulasi dalam debug mode
+    // Firebase Auth sebenarnya tidak memiliki API untuk mengubah status verifikasi email
+    print('DEBUG: Simulating email verified state: $value');
   }
 }

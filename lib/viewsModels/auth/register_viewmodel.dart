@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,6 +8,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/auth/auth_service.dart';
 import '../../core/services/firestore_service.dart';
 import '../../models/user_model.dart';
@@ -14,6 +16,7 @@ import '../../models/user_model.dart';
 class RegisterViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -26,6 +29,18 @@ class RegisterViewModel extends ChangeNotifier {
   bool _verificationEmailSent = false;
   bool _isEmailVerified = false;
   int _registrationAttempts = 0;
+  bool _isVerificationTimedOut = false;
+
+  // Timeout dan countdown
+  Timer? _verificationTimer;
+  Timer? _countdownTimer;
+  final int _verificationTimeoutMinutes = 10;
+  DateTime? _verificationStartTime;
+  int _remainingSeconds = 0;
+  String _pendingRegistrationId = '';
+
+  // Temporary user credentials
+  UserCredential? _tempUserCredential;
 
   // Foto profile
   File? _selectedImage;
@@ -43,6 +58,11 @@ class RegisterViewModel extends ChangeNotifier {
   final TextEditingController birthDateController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController originChurchController = TextEditingController();
+
+  // Variabel untuk menyimpan verifikasi id
+  String? _verificationId;
+  String? _email;
+  String? _password;
 
   // Default avatar
   static const String defaultAvatarUrl = 'assets/images/default_avatar.png';
@@ -62,7 +82,16 @@ class RegisterViewModel extends ChangeNotifier {
   bool get isChurchMember => _isChurchMember;
   bool get showVerifyButton => _isEmailValid && !_isEmailVerified;
   int get registrationAttempts => _registrationAttempts;
-  User? get currentUser => FirebaseAuth.instance.currentUser;
+  User? get currentUser => _tempUserCredential?.user;
+  bool get isVerificationTimedOut => _isVerificationTimedOut;
+
+  // Countdown getter
+  int get remainingSeconds => _remainingSeconds;
+  String get countdownText {
+    final minutes = _remainingSeconds ~/ 60;
+    final seconds = _remainingSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
 
   // Baptism status
   void setBaptismStatus(bool value) {
@@ -110,8 +139,7 @@ class RegisterViewModel extends ChangeNotifier {
 
       // Verifikasi tambahan untuk mengecek apakah email sudah terdaftar
       try {
-        final methods =
-            await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+        final methods = await _firebaseAuth.fetchSignInMethodsForEmail(email);
         if (methods.isNotEmpty) {
           _isEmailValid = false;
           _emailValidationMessage =
@@ -240,7 +268,371 @@ class RegisterViewModel extends ChangeNotifier {
     }
   }
 
-  // Verifikasi email dengan metode normal YANG TELAH DIMODIFIKASI
+  // Metode baru: Hanya memeriksa ketersediaan email tanpa mendaftarkan user
+  Future<bool> checkEmailAvailability(String email) async {
+    try {
+      final methods = await _firebaseAuth.fetchSignInMethodsForEmail(email);
+      return methods.isEmpty; // Email tersedia jika tidak ada metode sign-in
+    } catch (e) {
+      print('Error checking email availability: $e');
+      // Dalam kasus error, asumsikan email tidak tersedia untuk berjaga-jaga
+      return false;
+    }
+  }
+
+  // Mulai timer untuk pemeriksaan verifikasi berkala
+  void _startVerificationTimer() async {
+    // Batalkan timer yang ada jika masih berjalan
+    _verificationTimer?.cancel();
+    _countdownTimer?.cancel();
+    _isVerificationTimedOut = false;
+
+    // Set waktu mulai dan total waktu countdown
+    _verificationStartTime = DateTime.now();
+    _remainingSeconds = _verificationTimeoutMinutes * 60;
+
+    // Simpan informasi pendaftaran yang sedang berlangsung di SharedPreferences
+    if (_tempUserCredential?.user != null) {
+      await _savePendingRegistration(_tempUserCredential!.user!.uid);
+    }
+
+    // Mulai countdown timer yang diperbarui setiap detik
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (_remainingSeconds > 0) {
+        _remainingSeconds--;
+        notifyListeners();
+      } else {
+        timer.cancel();
+        _handleVerificationTimeout();
+      }
+    });
+
+    // Buat timer yang memeriksa status verifikasi setiap 3 detik
+    _verificationTimer =
+        Timer.periodic(const Duration(seconds: 3), (timer) async {
+      // Cek apakah sudah melewati batas waktu
+      final currentTime = DateTime.now();
+      final elapsed = currentTime.difference(_verificationStartTime!).inMinutes;
+
+      if (elapsed >= _verificationTimeoutMinutes) {
+        timer.cancel();
+        _countdownTimer?.cancel();
+        _handleVerificationTimeout();
+        return;
+      }
+
+      // Cek status verifikasi jika user sedang login
+      if (_tempUserCredential?.user != null) {
+        final verified = await checkEmailVerificationStatus();
+        if (verified) {
+          timer.cancel();
+          _countdownTimer?.cancel();
+          await _clearPendingRegistration(); // Hapus data pendaftaran tertunda karena sukses
+        }
+      } else {
+        // Jika tidak ada user terdeteksi, batalkan timer
+        timer.cancel();
+        _countdownTimer?.cancel();
+      }
+    });
+  }
+
+  // Handle verification timeout
+  Future<void> _handleVerificationTimeout() async {
+    print('Verification timed out');
+    _isVerificationTimedOut = true;
+
+    // Hapus user sementara dengan logging detail untuk debugging
+    try {
+      print('Attempting to delete temporary user due to timeout');
+
+      if (_tempUserCredential?.user != null) {
+        print(
+            'User exists: ${_tempUserCredential!.user!.uid}, email: ${_tempUserCredential!.user!.email}');
+
+        try {
+          // Pastikan user credential masih fresh
+          await _tempUserCredential!.user!.reload();
+          print('User reloaded successfully');
+
+          // Verifikasi apakah email sudah diverifikasi
+          final isVerified = _tempUserCredential!.user!.emailVerified;
+          print('Email verified status: $isVerified');
+
+          if (!isVerified) {
+            try {
+              // Coba hapus akun
+              await _tempUserCredential!.user!.delete();
+              print('Successfully deleted unverified user');
+            } catch (deleteError) {
+              print('Error deleting user: $deleteError');
+
+              // Jika error karena requires-recent-login, coba login ulang
+              if (deleteError is FirebaseAuthException &&
+                  deleteError.code == 'requires-recent-login' &&
+                  _email != null &&
+                  _password != null) {
+                try {
+                  print('Attempting to re-authenticate');
+                  // Re-authenticate
+                  final credential = EmailAuthProvider.credential(
+                    email: _email!,
+                    password: _password!,
+                  );
+                  await _tempUserCredential!.user!
+                      .reauthenticateWithCredential(credential);
+
+                  // Coba delete lagi
+                  await _tempUserCredential!.user!.delete();
+                  print('Successfully deleted user after re-authentication');
+                } catch (reauthError) {
+                  print('Re-authentication failed: $reauthError');
+                }
+              }
+            }
+          }
+        } catch (reloadError) {
+          print('Error reloading user: $reloadError');
+        }
+      } else {
+        print('No user to delete (null credential)');
+      }
+
+      // Bersihkan credential dan data registrasi tertunda
+      _tempUserCredential = null;
+      await _clearPendingRegistration();
+
+      _setError('Waktu verifikasi email telah habis. Silakan coba lagi.');
+    } catch (e) {
+      print('Error handling verification timeout: $e');
+      _setError('Waktu verifikasi email telah habis. Error: $e');
+    }
+
+    // Reset states
+    _verificationEmailSent = false;
+    notifyListeners();
+  }
+
+  // Simpan informasi pendaftaran yang tertunda
+  Future<void> _savePendingRegistration(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _pendingRegistrationId = userId;
+      await prefs.setString('pending_registration_id', userId);
+      await prefs.setInt(
+          'pending_registration_expires',
+          DateTime.now()
+              .add(Duration(minutes: _verificationTimeoutMinutes))
+              .millisecondsSinceEpoch);
+      await prefs.setString('pending_registration_email', _email ?? '');
+      await prefs.setString('pending_registration_password', _password ?? '');
+
+      print('Saved pending registration info: $userId');
+    } catch (e) {
+      print('Failed to save pending registration: $e');
+    }
+  }
+
+  // Hapus informasi pendaftaran tertunda
+  Future<void> _clearPendingRegistration() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('pending_registration_id');
+      await prefs.remove('pending_registration_expires');
+      await prefs.remove('pending_registration_email');
+      await prefs.remove('pending_registration_password');
+      _pendingRegistrationId = '';
+      print('Cleared pending registration info');
+    } catch (e) {
+      print('Failed to clear pending registration: $e');
+    }
+  }
+
+  // Cek apakah ada pendaftaran tertunda yang perlu dibersihkan
+  // Dipanggil saat aplikasi dimulai
+  Future<void> checkPendingRegistration() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final pendingId = prefs.getString('pending_registration_id');
+      final expiresAt = prefs.getInt('pending_registration_expires');
+      final pendingEmail = prefs.getString('pending_registration_email');
+      final pendingPassword = prefs.getString('pending_registration_password');
+
+      if (pendingId != null && expiresAt != null) {
+        _pendingRegistrationId = pendingId;
+        print('Found pending registration: $pendingId');
+
+        // Cek apakah sudah kadaluarsa
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (now >= expiresAt) {
+          print('Pending registration expired, cleaning up...');
+
+          // Coba hapus user yang tidak terverifikasi
+          if (pendingEmail != null && pendingPassword != null) {
+            try {
+              print('Attempting to delete expired registration: $pendingEmail');
+
+              // Coba login dengan kredensial yang tersimpan
+              try {
+                final credential =
+                    await _firebaseAuth.signInWithEmailAndPassword(
+                        email: pendingEmail, password: pendingPassword);
+
+                if (credential.user != null) {
+                  // Reload untuk mendapatkan status terbaru
+                  await credential.user!.reload();
+
+                  // Cek apakah email sudah diverifikasi
+                  if (!credential.user!.emailVerified) {
+                    // Hapus jika belum diverifikasi
+                    await credential.user!.delete();
+                    print(
+                        'Successfully deleted unverified user: $pendingEmail');
+                  } else {
+                    print('User already verified, not deleting: $pendingEmail');
+                  }
+
+                  // Logout
+                  await _firebaseAuth.signOut();
+                }
+              } catch (loginError) {
+                print('Error signing in to delete user: $loginError');
+
+                // Coba cek apakah email masih tersedia
+                final methods = await _firebaseAuth
+                    .fetchSignInMethodsForEmail(pendingEmail);
+                if (methods.isNotEmpty) {
+                  // Email masih terdaftar, tapi kita tidak bisa menghapusnya
+                  print(
+                      'Email still registered but cannot delete: $pendingEmail');
+                }
+              }
+            } catch (e) {
+              print('Error during cleanup: $e');
+            }
+          }
+
+          await _clearPendingRegistration();
+        } else {
+          // Masih valid, tetapi kita tidak perlu melakukan apa-apa
+          // Biarkan user menyelesaikan proses dengan normal
+          final remainingMillis = expiresAt - now;
+          print(
+              'Pending registration still valid for ${remainingMillis / 1000} seconds');
+        }
+      }
+    } catch (e) {
+      print('Error checking pending registration: $e');
+    }
+  }
+
+  // Membersihkan user sementara
+  Future<bool> _deleteTempUser() async {
+    try {
+      // Jika ada user yang login, coba hapus
+      if (_tempUserCredential?.user != null) {
+        print(
+            'Attempting to delete user: ${_tempUserCredential?.user?.uid}, email: ${_tempUserCredential?.user?.email}');
+
+        try {
+          // Make sure the user is fresh
+          await _tempUserCredential!.user!.reload();
+          print('User reloaded successfully');
+
+          // Only delete if not verified
+          final isVerified = _tempUserCredential!.user!.emailVerified;
+          print('Email verified status: $isVerified');
+
+          if (!isVerified) {
+            try {
+              await _tempUserCredential!.user!.delete();
+              print('Temporary user deleted successfully');
+              _tempUserCredential = null;
+              return true;
+            } catch (deleteError) {
+              print('Error deleting user: $deleteError');
+
+              // Coba handle kasus requires-recent-login
+              if (deleteError is FirebaseAuthException &&
+                  deleteError.code == 'requires-recent-login' &&
+                  _email != null &&
+                  _password != null) {
+                try {
+                  print('Attempting to re-authenticate');
+
+                  // Re-authenticate user
+                  final credential = EmailAuthProvider.credential(
+                    email: _email!,
+                    password: _password!,
+                  );
+
+                  await _tempUserCredential!.user!
+                      .reauthenticateWithCredential(credential);
+                  print('Re-authentication successful');
+
+                  // Coba lagi hapus
+                  await _tempUserCredential!.user!.delete();
+                  print('User deleted after re-authentication');
+                  _tempUserCredential = null;
+                  return true;
+                } catch (reauthError) {
+                  print('Re-authentication failed: $reauthError');
+                  throw reauthError; // Re-throw untuk ditangani di luar
+                }
+              } else {
+                throw deleteError; // Re-throw untuk ditangani di luar
+              }
+            }
+          } else {
+            print('User already verified, not deleting');
+            return false;
+          }
+        } catch (reloadError) {
+          print('Error reloading user: $reloadError');
+
+          // Coba sign out dulu
+          try {
+            await _firebaseAuth.signOut();
+            print('Signed out user after reload error');
+          } catch (signOutError) {
+            print('Error signing out: $signOutError');
+          }
+
+          _tempUserCredential = null;
+          return false;
+        }
+      } else {
+        print('No user credential to delete');
+      }
+
+      // Bersihkan referensi
+      _tempUserCredential = null;
+      return true;
+    } catch (e) {
+      print('Error in _deleteTempUser: $e');
+
+      // Check if error is because user is already signed out
+      if (e is FirebaseAuthException &&
+          (e.code == 'user-not-found' || e.code == 'no-current-user')) {
+        _tempUserCredential = null;
+        return true;
+      }
+
+      // Try to sign out anyway
+      try {
+        await _firebaseAuth.signOut();
+        print('Signed out after error');
+      } catch (signOutError) {
+        print('Error signing out: $signOutError');
+      }
+
+      _tempUserCredential = null;
+      return false;
+    }
+  }
+
+  // Verifikasi email dengan metode normal yang DIMODIFIKASI
+  // Kita membuat akun Firebase Auth sementara untuk verifikasi
   Future<bool> sendVerificationEmail() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       _setError('Email dan password harus diisi');
@@ -250,22 +642,16 @@ class RegisterViewModel extends ChangeNotifier {
     try {
       _setLoading(true);
 
+      // Simpan email dan password untuk digunakan nanti setelah verifikasi
+      _email = emailController.text.trim();
+      _password = passwordController.text.trim();
+
       if (kDebugMode) {
-        // DEVELOPMENT MODE: Skip Firebase Auth dan simulasikan sukses
-        print('DEBUG: Melewati registrasi Firebase dan verifikasi email');
-        await Future.delayed(Duration(seconds: 1)); // Simulasi delay network
+        // DEVELOPMENT MODE: Simulasikan sukses verifikasi
+        print('DEBUG: Simulasi verifikasi email');
+        await Future.delayed(
+            const Duration(seconds: 1)); // Simulasi delay network
 
-        // Mencoba membuat credential di Firebase tapi tidak menunggu verifikasi
-        try {
-          await _authService.register(
-            emailController.text.trim(),
-            passwordController.text.trim(),
-          );
-        } catch (e) {
-          print('Error registrasi Firebase, tapi diabaikan untuk debug: $e');
-        }
-
-        // Anggap email sudah terverifikasi untuk debug
         _verificationEmailSent = true;
         _isEmailVerified = true; // Langsung set verified=true untuk debug
 
@@ -277,31 +663,63 @@ class RegisterViewModel extends ChangeNotifier {
       // Kode normal untuk mode produksi
       _registrationAttempts++;
 
+      // Periksa dulu apakah email tersedia (tidak terdaftar)
+      bool isEmailAvailable = await checkEmailAvailability(_email!);
+
+      if (!isEmailAvailable) {
+        _setError('Email sudah terdaftar. Silakan gunakan email lain.');
+        _setLoading(false);
+        return false;
+      }
+
       // Jika sudah mencoba beberapa kali, tambahkan jeda
       if (_registrationAttempts > 1) {
-        // Tambahkan jeda untuk menghindari rate limit
         await Future.delayed(Duration(seconds: _registrationAttempts));
       }
 
-      // Register with Firebase Auth (without saving to Firestore yet)
-      UserCredential userCredential = await _authService.register(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
+      // Hapus user sementara yang mungkin masih ada
+      await _deleteTempUser();
+      await _clearPendingRegistration();
 
-      // Send verification email
+      // Buat akun sementara untuk dikirim email verifikasi
       try {
-        await userCredential.user!.sendEmailVerification();
-      } catch (e) {
-        print('Error sending verification email: $e');
-        // Lanjutkan meski gagal kirim email
-      }
+        _tempUserCredential =
+            await _firebaseAuth.createUserWithEmailAndPassword(
+          email: _email!,
+          password: _password!,
+        );
 
-      _verificationEmailSent = true;
-      _registrationAttempts = 0; // Reset counter setelah berhasil
-      _setLoading(false);
-      notifyListeners();
-      return true;
+        print(
+            'Created temporary user: ${_tempUserCredential?.user?.uid}, ${_tempUserCredential?.user?.email}');
+
+        // Kirim email verifikasi
+        await _tempUserCredential!.user?.sendEmailVerification();
+        print('Verification email sent');
+
+        // Set flag
+        _verificationEmailSent = true;
+
+        // Mulai timer pemeriksaan
+        _startVerificationTimer();
+
+        _registrationAttempts = 0; // Reset counter setelah berhasil
+        _setLoading(false);
+        notifyListeners();
+        return true;
+      } catch (e) {
+        // Tangani error
+        if (e is FirebaseAuthException) {
+          if (e.code == 'email-already-in-use') {
+            _setError('Email sudah terdaftar. Silakan gunakan email lain.');
+          } else {
+            _setError('Error saat mendaftarkan akun: ${e.message}');
+          }
+        } else {
+          _setError('Terjadi kesalahan: $e');
+        }
+        _setLoading(false);
+        return false;
+      }
     } catch (e) {
       _setLoading(false);
 
@@ -338,7 +756,7 @@ class RegisterViewModel extends ChangeNotifier {
     }
   }
 
-  // Verifikasi email dengan penanganan khusus untuk debugging
+  // METODE YANG DIPERBAIKI: Verifikasi email dengan penanganan khusus untuk debugging
   Future<bool> checkEmailVerificationStatus() async {
     if (kDebugMode) {
       // DEVELOPMENT MODE: Selalu return true untuk bypass verifikasi email
@@ -349,34 +767,103 @@ class RegisterViewModel extends ChangeNotifier {
     }
 
     try {
-      // Re-authenticate to get fresh user
-      try {
-        await FirebaseAuth.instance.currentUser?.reload();
-      } catch (e) {
-        print('Error reloading user: $e');
-        // Coba login ulang jika reload gagal
-        if (e is FirebaseAuthException && e.code == 'user-token-expired') {
-          try {
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-              email: emailController.text.trim(),
-              password: passwordController.text.trim(),
-            );
-          } catch (signInError) {
-            print('Error signing in again: $signInError');
-          }
-        }
+      // Cek apakah ada user sementara
+      if (_tempUserCredential == null || _tempUserCredential!.user == null) {
+        print('No temporary user found for verification check');
+        return false;
       }
 
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null && user.emailVerified) {
-        _isEmailVerified = true;
-        notifyListeners();
-        return true;
+      // Sign out dulu jika ada user lain yang sedang login
+      bool wasLoggedIn = false;
+      final currentUser = _firebaseAuth.currentUser;
+      if (currentUser != null &&
+          currentUser.uid != _tempUserCredential!.user!.uid) {
+        print('Another user was logged in, signing out first');
+        await _firebaseAuth.signOut();
+        wasLoggedIn = true;
       }
-      return false;
+
+      // Cara 1: Coba login ulang untuk mendapatkan status terbaru
+      try {
+        if (_email != null && _password != null) {
+          print('Attempting to sign in to check verification status: $_email');
+
+          // Sign in untuk mendapatkan user credential yang fresh
+          final freshCredential = await _firebaseAuth
+              .signInWithEmailAndPassword(email: _email!, password: _password!);
+
+          // Update temp credential
+          _tempUserCredential = freshCredential;
+
+          // Cek status verifikasi dari credential baru
+          final isVerified = freshCredential.user!.emailVerified;
+          print('Fresh sign in verification status: $isVerified');
+
+          if (isVerified) {
+            _isEmailVerified = true;
+            notifyListeners();
+            return true;
+          }
+        }
+      } catch (loginError) {
+        print('Error re-signing in to check status: $loginError');
+        // Lanjutkan ke cara alternatif jika login gagal
+      }
+
+      // Cara 2: Coba dengan reload
+      try {
+        print('Attempting to reload user: ${_tempUserCredential!.user!.email}');
+
+        // Force reload user
+        await _tempUserCredential!.user!.reload();
+
+        // Get fresh instance of user
+        final freshUser = _firebaseAuth.currentUser;
+        if (freshUser != null) {
+          print('User reloaded, checking verification status');
+
+          // Cek status setelah reload
+          final isVerified = freshUser.emailVerified;
+          print('Reload verification status: $isVerified');
+
+          if (isVerified) {
+            _isEmailVerified = true;
+            notifyListeners();
+            return true;
+          }
+        } else {
+          print('No user after reload');
+        }
+      } catch (reloadError) {
+        print('Error reloading user: $reloadError');
+        // Lanjutkan ke cara alternatif jika reload gagal
+      }
+
+      // Cara 3: Cek dengan fetchSignInMethodsForEmail
+      try {
+        if (_email != null) {
+          print('Checking sign-in methods for: $_email');
+          final methods =
+              await _firebaseAuth.fetchSignInMethodsForEmail(_email!);
+
+          // Jika email sudah diverifikasi, email+password akan muncul di methods
+          print('Available sign-in methods: $methods');
+
+          // Ini hanya indikasi saja, tidak 100% akurat
+          if (methods.contains('password') && methods.isNotEmpty) {
+            print('Email found in sign-in methods, might be verified');
+            // Kita tidak set verified = true disini, karena ini hanya indikasi
+          }
+        }
+      } catch (e) {
+        print('Error checking sign-in methods: $e');
+      }
+
+      // Hasil akhir: jika semua cara gagal mendeteksi verifikasi
+      return _isEmailVerified;
     } catch (e) {
       print('Error checking verification status: $e');
-      return kDebugMode; // Return true in debug mode, false otherwise
+      return false; // Tetap kembalikan false pada production
     }
   }
 
@@ -392,35 +879,43 @@ class RegisterViewModel extends ChangeNotifier {
     try {
       _setLoading(true);
 
-      // Cek apakah user masih valid
-      User? user = FirebaseAuth.instance.currentUser;
+      // Cek apakah user sementara masih ada
+      if (_tempUserCredential == null || _tempUserCredential!.user == null) {
+        _setError(
+            'Sesi verifikasi telah berakhir. Silakan coba lagi dari awal.');
+        _setLoading(false);
+        return;
+      }
 
-      if (user == null) {
-        // Jika user null, coba login ulang
-        UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
-        );
-        user = userCredential.user;
+      // Reload user terlebih dahulu
+      await _tempUserCredential!.user!.reload();
+
+      // Cek apakah sudah terverifikasi
+      final isVerified = _tempUserCredential!.user!.emailVerified;
+      if (isVerified) {
+        _isEmailVerified = true;
+        _setLoading(false);
+        notifyListeners();
+        return;
       }
 
       // Kirim ulang email verifikasi
-      if (user != null) {
-        await user.sendEmailVerification();
-        _setLoading(false);
-        _verificationEmailSent = true;
-        notifyListeners();
-      } else {
-        throw Exception('Tidak dapat mengidentifikasi pengguna');
-      }
+      await _tempUserCredential!.user!.sendEmailVerification();
+      print('Verification email resent');
+
+      // Reset timer untuk memberikan waktu penuh lagi
+      _startVerificationTimer();
+
+      _setLoading(false);
+      _verificationEmailSent = true;
+      notifyListeners();
     } catch (e) {
       _setLoading(false);
       _setError('Gagal mengirim ulang email verifikasi: $e');
     }
   }
 
-  // Proses registrasi setelah verifikasi email
+  // Proses registrasi SETELAH email telah diverifikasi dan data lengkap
   Future<bool> completeRegistration() async {
     // Jika dalam debug mode, bypass validasi email
     if (kDebugMode) {
@@ -432,58 +927,80 @@ class RegisterViewModel extends ChangeNotifier {
     try {
       _setLoading(true);
 
-      // Get the current user after verification
-      final User? user = FirebaseAuth.instance.currentUser;
-      final String userId =
-          user?.uid ?? 'debug-user-id-${DateTime.now().millisecondsSinceEpoch}';
+      // Validasi apakah email sudah terverifikasi
+      if (!_isEmailVerified && !kDebugMode) {
+        _setError('Email belum diverifikasi');
+        _setLoading(false);
+        return false;
+      }
 
-      // Jika tidak ada user (mungkin karena error atau debug mode), gunakan anonim
-      if (user == null && kDebugMode) {
-        print("DEBUG: Tidak ada user aktif, mencoba membuat user baru");
+      // POINT KRITIS: Gunakan kredensial yang sudah ada dan terverifikasi
+      // Akun sudah dibuat saat verifikasi, tidak perlu buat akun baru
+      String userId;
 
-        try {
-          // Coba membuat user jika tidak ada
-          final UserCredential userCredential = await _authService.register(
-            emailController.text.trim(),
-            passwordController.text.trim(),
+      if (kDebugMode) {
+        // Dalam mode debug, buat akun user baru jika belum ada
+        if (_tempUserCredential == null) {
+          _tempUserCredential =
+              await _firebaseAuth.createUserWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
           );
-        } catch (e) {
-          print("DEBUG: Error saat mencoba membuat user baru: $e");
         }
+        userId = _tempUserCredential?.user?.uid ??
+            'temp-${DateTime.now().millisecondsSinceEpoch}';
+      } else {
+        // Dalam mode produksi, harus ada user yang telah terverifikasi
+        if (_tempUserCredential == null || _tempUserCredential!.user == null) {
+          _setError(
+              'Sesi verifikasi telah berakhir. Silakan verifikasi email terlebih dahulu.');
+          _setLoading(false);
+          return false;
+        }
+        userId = _tempUserCredential!.user!.uid;
+      }
+
+      // Get FCM Token
+      String? fcmToken;
+      try {
+        fcmToken = await FirebaseMessaging.instance.getToken();
+      } catch (e) {
+        print("Error mendapatkan FCM token: $e");
       }
 
       // Upload foto jika ada
       final String? photoUrl = await _uploadImage(userId);
 
-      // Get FCM Token - dengan error handling untuk debug
-      String? fcmToken;
-      try {
-        fcmToken = await FirebaseMessaging.instance.getToken();
-      } catch (e) {
-        print("DEBUG: Error mendapatkan FCM token: $e");
-      }
-
       // Buat user model dengan role user
       final userModel = UserModel(
         id: userId,
-        email: emailController.text.trim(),
+        email: _tempUserCredential?.user?.email ?? emailController.text.trim(),
         name: nameController.text.trim(),
         address: addressController.text.trim(),
         birthDate: _selectedDate ??
             DateTime.now().subtract(
-                Duration(days: 365 * 20)), // Default 20 tahun jika null
+                const Duration(days: 365 * 20)), // Default 20 tahun jika null
         phoneNumber: phoneController.text.trim(),
         photoUrl: photoUrl, // Use uploaded URL if available
         fcmToken: fcmToken,
         role: 'user',
         createdAt: DateTime.now(),
+        isBaptized: _isBaptized,
+        isChurchMember: _isChurchMember,
+        originChurch: !_isChurchMember ? originChurchController.text : '',
       );
 
       // Simpan data user ke Firestore
       try {
         await _firestoreService.saveUserData(userModel);
+
+        // Subscribe ke topik notifikasi jika perlu
+        await _authService.subscribeToNotificationTopics();
+
+        // Hapus informasi pendaftaran yang tertunda karena sudah selesai
+        await _clearPendingRegistration();
       } catch (e) {
-        print("DEBUG: Error menyimpan data user: $e");
+        print("Error menyimpan data user: $e");
         if (!kDebugMode) {
           throw e; // Re-throw jika bukan debug mode
         }
@@ -501,6 +1018,11 @@ class RegisterViewModel extends ChangeNotifier {
 
       _setError(_getErrorMessage(e));
       return false;
+    } finally {
+      // Jangan hapus user sementara karena ini adalah user yang sebenarnya
+      // Bersihkan timer
+      _verificationTimer?.cancel();
+      _countdownTimer?.cancel();
     }
   }
 
@@ -596,6 +1118,39 @@ class RegisterViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Batalkan registrasi dan batalkan semua proses verifikasi
+  Future<bool> cancelRegistration() async {
+    try {
+      _setLoading(true);
+
+      // Stop all timers
+      _verificationTimer?.cancel();
+      _countdownTimer?.cancel();
+
+      // Delete the temporary user from Firebase
+      final success = await _deleteTempUser();
+      print('User deletion result: $success');
+
+      // Bersihkan informasi pendaftaran tertunda
+      await _clearPendingRegistration();
+
+      // Reset all verification states
+      _verificationEmailSent = false;
+      _isEmailVerified = false;
+      _isVerificationTimedOut = false;
+      _remainingSeconds = 0;
+
+      _setLoading(false);
+      notifyListeners();
+      return success;
+    } catch (e) {
+      print('Error cancelling registration: $e');
+      _setLoading(false);
+      _setError('Gagal membatalkan registrasi: $e');
+      return false;
+    }
+  }
+
   void resetForm() {
     emailController.clear();
     nameController.clear();
@@ -614,6 +1169,17 @@ class RegisterViewModel extends ChangeNotifier {
     _isEmailVerified = false;
     _emailValidationMessage = null;
     _verificationEmailSent = false;
+    _email = null;
+    _password = null;
+    _tempUserCredential = null;
+    _verificationTimer?.cancel();
+    _countdownTimer?.cancel();
+    _remainingSeconds = 0;
+    _isVerificationTimedOut = false;
+
+    // Bersihkan juga data pendaftaran tertunda
+    _clearPendingRegistration();
+
     notifyListeners();
   }
 
@@ -626,6 +1192,14 @@ class RegisterViewModel extends ChangeNotifier {
     birthDateController.dispose();
     phoneController.dispose();
     originChurchController.dispose();
+    _verificationTimer?.cancel();
+    _countdownTimer?.cancel();
+
+    // Coba hapus user sementara jika dispose terpanggil dan belum selesai registrasi
+    if (_tempUserCredential != null && !_isEmailVerified) {
+      _deleteTempUser();
+    }
+
     super.dispose();
   }
 }

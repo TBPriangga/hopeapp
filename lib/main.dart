@@ -11,6 +11,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:shared_preferences/shared_preferences.dart';
 
 // View Models
 import 'package:hopeapp/viewsModels/auth/login_viewmodel.dart';
@@ -48,24 +49,118 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+// Pembersihan pendaftaran yang tertunda
+Future<void> cleanupPendingRegistrations() async {
+  try {
+    // Cek SharedPreferences untuk registrasi yang tertunda
+    final prefs = await SharedPreferences.getInstance();
+    final pendingId = prefs.getString('pending_registration_id');
+    final expiresAt = prefs.getInt('pending_registration_expires');
+    final pendingEmail = prefs.getString('pending_registration_email');
+    final pendingPassword = prefs.getString('pending_registration_password');
+
+    if (pendingId != null && expiresAt != null) {
+      print('Found pending registration: $pendingId, email: $pendingEmail');
+
+      // Cek apakah sudah kadaluarsa
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now >= expiresAt) {
+        print('Pending registration expired, cleaning up on app start');
+
+        // Coba hapus user yang tidak terverifikasi
+        if (pendingEmail != null && pendingPassword != null) {
+          try {
+            print('Attempting to login with: $pendingEmail');
+
+            // Coba sign in dengan email/password untuk mendapatkan akses ke akun
+            try {
+              final credential = await FirebaseAuth.instance
+                  .signInWithEmailAndPassword(
+                      email: pendingEmail, password: pendingPassword);
+
+              if (credential.user != null) {
+                print('Successfully signed in as: ${credential.user!.email}');
+
+                // Reload user untuk mendapatkan status terbaru
+                await credential.user!.reload();
+                print('User reloaded');
+
+                // Cek apakah email sudah diverifikasi
+                if (!credential.user!.emailVerified) {
+                  print('Email not verified, deleting user');
+
+                  // Hapus akun jika belum diverifikasi
+                  await credential.user!.delete();
+                  print('Successfully deleted unverified user: $pendingEmail');
+                } else {
+                  print('User already verified, not deleting: $pendingEmail');
+                }
+
+                // Sign out
+                await FirebaseAuth.instance.signOut();
+                print('Signed out after cleanup');
+              }
+            } catch (signInError) {
+              print('Error signing in to delete user: $signInError');
+
+              // Jika gagal sign in karena password salah, coba cek dengan fetchSignInMethodsForEmail
+              // untuk melihat apakah email masih terdaftar
+              try {
+                final methods = await FirebaseAuth.instance
+                    .fetchSignInMethodsForEmail(pendingEmail);
+                if (methods.isEmpty) {
+                  print('Email not registered anymore: $pendingEmail');
+                } else {
+                  print(
+                      'Email still registered but cannot delete: $pendingEmail, methods: $methods');
+                  // Tidak bisa menghapus karena tidak bisa login
+                }
+              } catch (methodError) {
+                print('Error checking sign-in methods: $methodError');
+              }
+            }
+          } catch (e) {
+            print('Error during cleanup: $e');
+          }
+        }
+
+        // Hapus data dari SharedPreferences
+        await prefs.remove('pending_registration_id');
+        await prefs.remove('pending_registration_expires');
+        await prefs.remove('pending_registration_email');
+        await prefs.remove('pending_registration_password');
+        print('Cleared pending registration data from SharedPreferences');
+      } else {
+        // Masih valid, tampilkan berapa lama lagi berlaku
+        final remainingMillis = expiresAt - now;
+        print(
+            'Pending registration still valid for ${remainingMillis / 1000} seconds');
+      }
+    }
+  } catch (e) {
+    print('Error checking pending registrations: $e');
+  }
+}
+
 // Menonaktifkan Firebase App Check untuk debugging
 Future<void> disableAppCheckForDebugging() async {
-  // Menonaktifkan Firebase App Check
-  print('DEVELOPMENT MODE: Firebase App Check dinonaktifkan untuk debugging');
-
-  // Kita tidak memanggil FirebaseAppCheck.instance.activate() sama sekali
-  // Ini akan mencegah App Check bekerja dan menghilangkan pemblokiran
-
-  // Jika diperlukan, bisa didaftarkan notifikasi ketika App Check dimatikan
+  // Hanya menonaktifkan Firebase App Check dalam mode debug
   if (kDebugMode) {
+    print('DEVELOPMENT MODE: Firebase App Check dinonaktifkan untuk debugging');
+    print('=================================================');
+    print('| FIREBASE APP CHECK DINONAKTIFKAN UNTUK DEBUGGING |');
+    print('| FITUR VERIFIKASI EMAIL JUGA DILEWATI            |');
+    print('=================================================');
+  } else {
+    // Aktifkan App Check di lingkungan produksi
     try {
-      // Tampilkan notifikasi debug di console
-      print('=================================================');
-      print('| FIREBASE APP CHECK DINONAKTIFKAN UNTUK DEBUGGING |');
-      print('| FITUR VERIFIKASI EMAIL JUGA DILEWATI            |');
-      print('=================================================');
+      await FirebaseAppCheck.instance.activate(
+        // Gunakan Android Provider dan Debug Provider berdasarkan konfigurasi Anda
+        androidProvider: AndroidProvider.playIntegrity,
+      );
+      print('PRODUCTION MODE: Firebase App Check diaktifkan');
     } catch (e) {
-      print('Error saat notifikasi debug: $e');
+      print('Error activating Firebase App Check: $e');
     }
   }
 }
@@ -269,10 +364,14 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // DIUBAH: Matikan Firebase App Check untuk debugging
+    // Inisialisasi Firebase
+    await Firebase.initializeApp();
+
+    // Aktifkan/nonaktifkan App Check berdasarkan mode
     await disableAppCheckForDebugging();
 
-    await Firebase.initializeApp();
+    // Bersihkan pendaftaran yang tertunda
+    await cleanupPendingRegistrations();
 
     await initializeDateFormatting('id_ID', null);
     await requestNotificationPermissions();

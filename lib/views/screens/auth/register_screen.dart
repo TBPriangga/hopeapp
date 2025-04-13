@@ -26,6 +26,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Timer? _verificationCheckTimer;
 
   @override
+  void initState() {
+    super.initState();
+    // Check if there's any pending registration from previous session
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<RegisterViewModel>(context, listen: false)
+          .checkPendingRegistration();
+    });
+  }
+
+  @override
   void dispose() {
     _confirmPasswordController.dispose();
     _debounceTimer?.cancel();
@@ -64,263 +74,493 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
+  // Metode untuk menangani klik tombol batalkan verifikasi
+  Future<void> _handleCancelVerification(RegisterViewModel viewModel) async {
+    // Tampilkan dialog konfirmasi
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Batalkan Verifikasi?'),
+            content: const Text(
+              'Jika Anda membatalkan proses verifikasi, akun sementara Anda akan dihapus dan Anda perlu memulai proses registrasi dari awal.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Tidak, Lanjutkan'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                ),
+                child: const Text('Ya, Batalkan'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (confirmed) {
+      // Tampilkan loading dialog
+      DialogHelper.showLoadingDialog(context: context);
+
+      // Proses pembatalan
+      final success = await viewModel.cancelRegistration();
+
+      // Tutup dialog loading
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+
+      // Tampilkan pesan sukses/gagal
+      if (context.mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Verifikasi dibatalkan. Silakan coba lagi.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  viewModel.errorMessage ?? 'Gagal membatalkan verifikasi'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Get screen dimensions untuk responsive layout
     final size = MediaQuery.of(context).size;
     final padding = MediaQuery.of(context).padding;
 
-    return ChangeNotifierProvider(
-      create: (_) => RegisterViewModel(),
-      child: Consumer<RegisterViewModel>(
+    return Scaffold(
+      body: Consumer<RegisterViewModel>(
         builder: (context, viewModel, _) {
-          return Scaffold(
-            body: Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/worship_bg.jpg'),
-                  fit: BoxFit.cover,
-                  alignment: Alignment(0.5, 0),
+          // Show error if any
+          if (viewModel.errorMessage != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(viewModel.errorMessage!),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              viewModel.clearError();
+            });
+          }
+
+          return Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/worship_bg.jpg'),
+                fit: BoxFit.cover,
+                alignment: Alignment(0.5, 0),
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF132054).withOpacity(0.8),
+                    const Color(0xFF2B478A).withOpacity(0.8),
+                  ],
+                  stops: const [0.0, 1.0],
                 ),
               ),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFF132054).withOpacity(0.8),
-                      const Color(0xFF2B478A).withOpacity(0.8),
-                    ],
-                    stops: const [0.0, 1.0],
-                  ),
-                ),
-                child: SafeArea(
-                  child: SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: size.height - padding.top - padding.bottom,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: size.height * 0.03),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: size.height - padding.top - padding.bottom,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: size.height * 0.03),
 
-                            // Logo Section
-                            Center(
-                              child: Image.asset(
-                                'assets/logo/hope_logo_old.png',
-                                height: size.height * 0.15,
+                          // Logo Section
+                          Center(
+                            child: Image.asset(
+                              'assets/logo/hope_logo_old.png',
+                              height: size.height * 0.15,
+                            ),
+                          ),
+
+                          // Title Section
+                          const Center(
+                            child: Text(
+                              'Daftar Akun',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Center(
+                            child: Text(
+                              'Lengkapi data diri Anda',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+
+                          // Error Message
+                          if (viewModel.errorMessage != null)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(top: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: Colors.red.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.error_outline,
+                                      color: Colors.red[300], size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      viewModel.errorMessage!,
+                                      style: TextStyle(
+                                          color: Colors.red[300], fontSize: 14),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          SizedBox(height: size.height * 0.02),
+
+                          // Verification Email Sent Message
+                          if (viewModel.verificationEmailSent &&
+                              !viewModel.isVerificationTimedOut)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: Colors.green.withOpacity(0.3)),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.check_circle_outline,
+                                          color: Colors.green[400], size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Link verifikasi telah dikirim ke email Anda',
+                                          style: TextStyle(
+                                              color: Colors.green[400],
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Silakan cek email Anda dan klik link verifikasi untuk melanjutkan proses pendaftaran.',
+                                    style: TextStyle(
+                                        color: Colors.green[400], fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Countdown timer
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.timer,
+                                            color:
+                                                viewModel.remainingSeconds < 60
+                                                    ? Colors.red[700]
+                                                    : Colors.green[700],
+                                            size: 16),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'Waktu tersisa: ${viewModel.countdownText}',
+                                          style: TextStyle(
+                                            color:
+                                                viewModel.remainingSeconds < 60
+                                                    ? Colors.red[700]
+                                                    : Colors.green[700],
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      TextButton.icon(
+                                        onPressed: viewModel.isLoading
+                                            ? null
+                                            : () async {
+                                                await viewModel
+                                                    .resendVerificationEmail();
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          'Email verifikasi telah dikirim ulang'),
+                                                      backgroundColor:
+                                                          Colors.green,
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                        icon:
+                                            const Icon(Icons.refresh, size: 16),
+                                        label: const Text('Kirim Ulang'),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: Colors.green[400],
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8),
+                                        ),
+                                      ),
+                                      TextButton.icon(
+                                        onPressed: viewModel.isLoading
+                                            ? null
+                                            : () async {
+                                                final verified = await viewModel
+                                                    .checkEmailVerificationStatus();
+                                                if (context.mounted) {
+                                                  if (verified) {
+                                                    DialogHelper
+                                                        .showSuccessDialog(
+                                                      context: context,
+                                                      title:
+                                                          'Email Terverifikasi',
+                                                      message:
+                                                          'Email Anda telah berhasil diverifikasi. Silakan lengkapi data lainnya untuk menyelesaikan registrasi.',
+                                                      buttonText: 'Lanjutkan',
+                                                      onPressed: () {
+                                                        Navigator.pop(
+                                                            context); // Tutup dialog
+                                                      },
+                                                    );
+                                                  } else {
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text(
+                                                            'Email belum diverifikasi. Silakan cek email Anda.'),
+                                                        backgroundColor:
+                                                            Colors.orange,
+                                                      ),
+                                                    );
+                                                  }
+                                                }
+                                              },
+                                        icon: const Icon(Icons.verified_user,
+                                            size: 16),
+                                        label: const Text('Cek Status'),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: Colors.green[400],
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Tambahkan tombol batal
+                                  const SizedBox(height: 8),
+                                  TextButton.icon(
+                                    onPressed: viewModel.isLoading
+                                        ? null
+                                        : () => _handleCancelVerification(
+                                            viewModel),
+                                    icon: const Icon(Icons.cancel,
+                                        size: 16, color: Colors.red),
+                                    label: const Text('Batalkan Verifikasi',
+                                        style: TextStyle(color: Colors.red)),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
 
-                            // Title Section
-                            const Center(
-                              child: Text(
-                                'Daftar Akun',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          // Verification Timeout Message
+                          if (viewModel.isVerificationTimedOut)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: Colors.orange.withOpacity(0.3)),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Center(
-                              child: Text(
-                                'Lengkapi data diri Anda',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.warning_amber_rounded,
+                                          color: Colors.orange[700], size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Waktu verifikasi telah berakhir',
+                                          style: TextStyle(
+                                              color: Colors.orange[700],
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Silakan coba lagi dengan memasukkan email dan password Anda.',
+                                    style: TextStyle(
+                                        color: Colors.orange[700],
+                                        fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: TextButton.icon(
+                                      onPressed: viewModel.isLoading
+                                          ? null
+                                          : () async {
+                                              // Tampilkan loading dialog
+                                              DialogHelper.showLoadingDialog(
+                                                  context: context);
 
-                            // Error Message
-                            if (viewModel.errorMessage != null)
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                margin: const EdgeInsets.only(top: 16),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                      color: Colors.red.withOpacity(0.3)),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Icon(Icons.error_outline,
-                                        color: Colors.red[300], size: 20),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        viewModel.errorMessage!,
+                                              // Pertama, batalkan registrasi untuk menghapus akun dari Firebase Auth
+                                              final success = await viewModel
+                                                  .cancelRegistration();
+
+                                              // Tutup dialog loading
+                                              if (context.mounted) {
+                                                Navigator.pop(context);
+                                              }
+
+                                              if (success) {
+                                                // Hanya reset form jika pembatalan berhasil
+                                                viewModel.resetForm();
+
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          'Registrasi direset. Silakan coba lagi.'),
+                                                      backgroundColor:
+                                                          Colors.green,
+                                                    ),
+                                                  );
+                                                }
+                                              } else {
+                                                // Tampilkan pesan error jika gagal
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          'Gagal membatalkan registrasi. Coba lagi atau restart aplikasi.'),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            },
+                                      icon: Icon(Icons.refresh,
+                                          color: Colors.orange[700], size: 16),
+                                      label: Text(
+                                        'Coba Lagi',
                                         style: TextStyle(
-                                            color: Colors.red[300],
-                                            fontSize: 14),
+                                          color: Colors.orange[700],
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            SizedBox(height: size.height * 0.02),
+                            ),
 
-                            // Verification Email Sent Message
-                            if (viewModel.verificationEmailSent)
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                margin: const EdgeInsets.only(bottom: 16),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                      color: Colors.green.withOpacity(0.3)),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.check_circle_outline,
-                                            color: Colors.green[400], size: 20),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            'Link verifikasi telah dikirim ke email Anda',
-                                            style: TextStyle(
-                                                color: Colors.green[400],
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Silakan cek email Anda dan klik link verifikasi untuk melanjutkan proses pendaftaran.',
-                                      style: TextStyle(
-                                          color: Colors.green[400],
-                                          fontSize: 14),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        TextButton.icon(
-                                          onPressed: () async {
-                                            await viewModel
-                                                .resendVerificationEmail();
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                      'Email verifikasi telah dikirim ulang'),
-                                                  backgroundColor: Colors.green,
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          icon: const Icon(Icons.refresh,
-                                              size: 16),
-                                          label: const Text('Kirim Ulang'),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.green[400],
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8),
-                                          ),
-                                        ),
-                                        TextButton.icon(
-                                          onPressed: () async {
-                                            final verified = await viewModel
-                                                .checkEmailVerificationStatus();
-                                            if (context.mounted) {
-                                              if (verified) {
-                                                DialogHelper.showSuccessDialog(
-                                                  context: context,
-                                                  title: 'Email Terverifikasi',
-                                                  message:
-                                                      'Email Anda telah berhasil diverifikasi. Silakan lengkapi data lainnya untuk menyelesaikan registrasi.',
-                                                  buttonText: 'Lanjutkan',
-                                                  onPressed: () {
-                                                    Navigator.pop(
-                                                        context); // Tutup dialog
-                                                  },
-                                                );
-                                              } else {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                        'Email belum diverifikasi. Silakan cek email Anda.'),
-                                                    backgroundColor:
-                                                        Colors.orange,
-                                                  ),
-                                                );
-                                              }
-                                            }
-                                          },
-                                          icon: const Icon(Icons.verified_user,
-                                              size: 16),
-                                          label: const Text('Cek Status'),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.green[400],
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                          // Email dan Verifikasi Section
+                          _buildEmailVerificationSection(viewModel),
+
+                          // Form Registrasi Lainnya (hanya muncul setelah verifikasi)
+                          if (viewModel.isEmailVerified) ...[
+                            const SizedBox(height: 20),
+                            const Text(
+                              'Lengkapi Data Diri',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
+                            ),
+                            const SizedBox(height: 16),
 
-                            // Email dan Verifikasi Section
-                            _buildEmailVerificationSection(viewModel),
+                            // Foto Profil Section
+                            _buildProfileImageSection(viewModel),
 
-                            // Form Registrasi Lainnya (hanya muncul setelah verifikasi)
-                            if (viewModel.isEmailVerified) ...[
-                              const SizedBox(height: 20),
-                              const Text(
-                                'Lengkapi Data Diri',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
+                            // Form Fields
+                            _buildRemainingFormFields(viewModel),
 
-                              // Foto Profil Section (tambahan baru)
-                              _buildProfileImageSection(viewModel),
+                            // Pertanyaan Status Baptis dan Keanggotaan
+                            _buildChurchStatusSection(viewModel),
 
-                              // Form Fields
-                              _buildRemainingFormFields(viewModel),
+                            // Terms and Conditions
+                            _buildTermsAndConditions(),
 
-                              // Pertanyaan Status Baptis dan Keanggotaan
-                              _buildChurchStatusSection(viewModel),
+                            SizedBox(height: size.height * 0.03),
 
-                              // Terms and Conditions
-                              _buildTermsAndConditions(),
-
-                              SizedBox(height: size.height * 0.03),
-
-                              // Complete Registration Button
-                              _buildCompleteRegistrationButton(
-                                  context, viewModel),
-                            ],
-
-                            SizedBox(height: size.height * 0.02),
-
-                            // Login Link
-                            _buildLoginLink(context),
-
-                            SizedBox(height: size.height * 0.02),
+                            // Complete Registration Button
+                            _buildCompleteRegistrationButton(
+                                context, viewModel),
                           ],
-                        ),
+
+                          SizedBox(height: size.height * 0.02),
+
+                          // Login Link
+                          _buildLoginLink(context),
+
+                          SizedBox(height: size.height * 0.02),
+                        ],
                       ),
                     ),
                   ),
@@ -333,7 +573,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Profile Image Section (tambahan baru)
+  // Profile Image Section
   Widget _buildProfileImageSection(RegisterViewModel viewModel) {
     return Column(
       children: [
@@ -577,7 +817,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
 
         // Email Validation Message
-        if (viewModel.emailValidationMessage != null)
+        if (viewModel.emailValidationMessage != null &&
+            !viewModel.isVerificationTimedOut)
           Padding(
             padding: const EdgeInsets.only(top: 8.0, left: 12.0),
             child: Text(
@@ -590,7 +831,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
 
         // Password Section (muncul hanya jika email valid dan belum diverifikasi)
-        if (viewModel.showVerifyButton && !viewModel.verificationEmailSent) ...[
+        if (viewModel.showVerifyButton &&
+            !viewModel.verificationEmailSent &&
+            !viewModel.isVerificationTimedOut) ...[
           const SizedBox(height: 16),
           CustomTextField(
             label: 'Kata Sandi',
@@ -928,7 +1171,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             title: const Text('Syarat & Ketentuan'),
                             content: const SingleChildScrollView(
                               child: Text(
-                                'Berikut adalah syarat dan ketentuan penggunaan aplikasi Hope.\n\n1. Akun hanya diperuntukkan bagi anggota jemaat.\n2. Data pribadi akan dijaga kerahasiaannya.\n3. Informasi yang diinputkan adalah informasi yang sebenarnya.',
+                                'Berikut adalah syarat dan ketentuan penggunaan aplikasi Hope.\n\n1. Akun diperuntukkan untuk Anggota jemaat dan partisipan.\n2. Data pribadi akan dijaga kerahasiaannya.\n3. Informasi yang diinputkan adalah informasi yang sebenarnya.',
                                 style: TextStyle(fontSize: 14),
                               ),
                             ),
