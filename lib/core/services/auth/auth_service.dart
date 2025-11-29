@@ -20,6 +20,7 @@ class AuthService {
     if (_isDebugMode) {
       // Selalu anggap email terverifikasi dalam mode debug
       print('DEBUG: Bypassing email verification check');
+
       return true;
     }
 

@@ -12,7 +12,6 @@ import 'package:timezone/data/latest.dart' as tz;
 import '../../../models/event/event_model.dart';
 import '../../../models/home/daily_word_model.dart';
 import '../../../models/notifications/notifications_model.dart';
-import '../firestore_service.dart';
 
 class NotificationRetryConfig {
   final int maxAttempts;

@@ -376,7 +376,7 @@ class _AboutScreenState extends State<AboutScreen>
           _buildTimelineSection(
             title: 'Penggembalaan Pdt. Em. Imanuel Suparman (1985-2007)',
             content:
-                'Pada tanggal 1 Januari 1985 gereja resmi memiliki gembala sidang yang baru. Beliau adalah Pdt. Imanuel Suparman yang sebelumnya melayani di GBI Getsemani Jakarta. Diawali dengan pelayanan KPW yang terdiri dari 12 kelompok dan Pos Pemberitaan Injil di daerah Bronggalan yang akhirnya menjadi GBI Duta Harapan, Pos Pemberitaan Injil di daerah Putat Jaya yang akhirnya menjadi GBI Putat Jaya, serta Pos Pemberitaan Injil di daerah Mojolebak yang saat ini menjadi GBI Pengharapan Cab. Balongpanggang. Hingga pada tahun 2005, Pdt. Em. Imanuel Suparman mengakhiri jabatan strukturalnya sebagai gembala sidang. Gereja kembali mengalami kekosongan gembala sidang selama 3 tahun.',
+                'Pada tanggal 1 Januari 1985 gereja resmi memiliki gembala sidang yang baru. Beliau adalah Pdt. Imanuel Suparman yang sebelumnya melayani di GBI Getsemani Jakarta. Diawali dengan pelayanan KPW yang terdiri dari 12 kelompok dan Pos Pemberitaan Injil di daerah Bronggalan yang akhirnya menjadi GBI Duta Harapan, Pos Pemberitaan Injil di daerah Putat Jaya yang akhirnya menjadi GBI Putat Jaya, serta Pos Pemberitaan Injil di daerah Mojolebak yang saat ini menjadi GBI Pengharapan Cab. Balongpanggang. Hingga pada awal Januari 2008, Pdt. Em. Imanuel Suparman mengakhiri jabatan strukturalnya sebagai gembala sidang.',
           ),
 
           _buildTimelineSection(
